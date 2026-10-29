@@ -36,6 +36,8 @@ class Recording {
       try {
         const exists = await RNFS.exists(cleanPath);
         if (!exists) {
+          const dir = cleanPath.substring(0, cleanPath.lastIndexOf('/'));
+          if (dir) await RNFS.mkdir(dir).catch(() => {});
           const dummyAudioBase64 = "AAAAHGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQAA";
           await RNFS.writeFile(cleanPath, dummyAudioBase64, 'base64').catch(async () => {
             await RNFS.writeFile(cleanPath, 'AUDIO_RECORDING_DATA', 'utf8');

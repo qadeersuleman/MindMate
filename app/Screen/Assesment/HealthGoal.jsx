@@ -1,103 +1,179 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-
-// Third party libraries
-import Animated, { FadeInUp } from 'react-native-reanimated';
-
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  Platform,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 // User defined components
 import AnimatedGoalButton from "../../components/Assesment/AnimatedGoalButton";
 import Colors from '../../assets/colors';
-import Headers from '../../components/Assesment/Header'
-import AppButton from '../../components/AppButton';
+import Headers from '../../components/Assesment/Header';
 import Title from '../../components/Assesment/Title';
-
 
 // Goals data
 const GOALS = [
   {
     text: 'I wanna reduce stress',
     icon: 'heart',
-    iconFamily: 'Feather', // Explicitly specify the family
-    color: Colors.features.mood,
+    iconFamily: 'Feather',
+    color: '#EF4444',
   },
   {
     text: 'I wanna try AI Therapy',
     icon: 'cpu',
     iconFamily: 'Feather',
-    color: Colors.features.ai,
+    color: '#5A8DEE',
   },
   {
     text: 'I want to be healthy',
     icon: 'shield',
     iconFamily: 'Feather',
-    color: Colors.features.meditation,
+    color: '#10B981',
   },
   {
     text: 'I want to be better person',
-    icon: 'smile', // Changed from 'smile-o' to 'smile'
-    iconFamily: 'Feather', // Explicitly specify Feather
-    color: Colors.features.journal,
+    icon: 'smile',
+    iconFamily: 'Feather',
+    color: '#F59E0B',
   },
   {
-    text: 'Just trying out the app',
+    text: 'Just exploring MindMate',
     icon: 'compass',
     iconFamily: 'Feather',
-    color: Colors.accent.teal,
+    color: '#7B61FF',
   },
 ];
 
 const HealthGoal = ({ navigation }) => {
   const [selectedGoal, setSelectedGoal] = useState(null);
 
+  const handleContinue = () => {
+    if (!selectedGoal) return;
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch (e) {}
+    navigation.navigate('AgeSelection', { health_goal: selectedGoal });
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: Colors.neutrals.background }]}>
-      <Headers onBack={() => navigation.goBack()} currentStep="1" />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
 
+      <View style={styles.innerContainer}>
+        <Headers onBack={() => navigation.goBack()} currentStep="1" />
 
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Title subtitle="Choose your primary focus so we can adapt your daily care plan and exercises">
+            What's your primary goal today?
+          </Title>
 
-      <Title style={styles.title}>What's your Health goal for today?</Title>
+          <View style={styles.optionsContainer}>
+            {GOALS.map((goal, index) => (
+              <AnimatedGoalButton
+                key={goal.text}
+                goal={goal}
+                index={index}
+                selectedGoal={selectedGoal}
+                onSelect={setSelectedGoal}
+              />
+            ))}
+          </View>
+        </ScrollView>
 
-      <View style={styles.optionsContainer}>
-        {GOALS.map((goal, index) => (
-          <AnimatedGoalButton
-            key={goal.text}
-            goal={goal}
-            index={index}
-            selectedGoal={selectedGoal}
-            onSelect={setSelectedGoal}
-          />
-        ))}
-      </View>
-
-      {selectedGoal ? (
-        <AppButton onPress={() => navigation.navigate('AgeSelection', { health_goal: selectedGoal })} />
-      ) : (
-        <View style={styles.disabledButtonContainer}>
-          <AppButton
-            text="Continue" 
-            onPress={() => {}}
-            style={styles.continueButtonInactive}
-          />
+        {/* Bottom Action Button */}
+        <View style={styles.bottomContainer}>
+          <TouchableOpacity
+            style={[
+              styles.continueButton,
+              !selectedGoal && styles.continueButtonDisabled,
+            ]}
+            onPress={handleContinue}
+            disabled={!selectedGoal}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={
+                selectedGoal
+                  ? ['#5A8DEE', '#7B61FF']
+                  : ['#CBD5E1', '#94A3B8']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.buttonGradient}
+            >
+              <Text style={styles.buttonText}>Continue</Text>
+              <Feather
+                name="arrow-right"
+                size={18}
+                color="#FFFFFF"
+                style={{ marginLeft: 8 }}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    paddingInline: 20,
+    backgroundColor: '#F8FAFC',
+  },
+  innerContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   optionsContainer: {
-    marginBottom: 10,
+    marginTop: 6,
   },
-  continueButtonInactive: {
-    backgroundColor: Colors.text.disabled,
+  bottomContainer: {
+    paddingVertical: 14,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    backgroundColor: '#F8FAFC',
   },
-  disabledButtonContainer: {
-    opacity: 0.7,
+  continueButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#5A8DEE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  continueButtonDisabled: {
+    shadowOpacity: 0.05,
+    elevation: 1,
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'Poppins-SemiBold',
+    letterSpacing: 0.3,
   },
 });
 

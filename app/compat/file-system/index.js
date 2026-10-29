@@ -1,7 +1,10 @@
 import RNFS from 'react-native-fs';
 
-export const documentDirectory = `${RNFS.DocumentDirectoryPath}/`;
-export const cacheDirectory = `${RNFS.CachesDirectoryPath}/`;
+const baseDoc = (RNFS.DocumentDirectoryPath || '').replace(/^file:\/\//, '').replace(/\/+$/, '');
+const baseCache = (RNFS.CachesDirectoryPath || '').replace(/^file:\/\//, '').replace(/\/+$/, '');
+
+export const documentDirectory = `file://${baseDoc}/`;
+export const cacheDirectory = `file://${baseCache}/`;
 
 const clean = (p) => (p || '').replace(/^file:\/\//, '');
 
@@ -19,7 +22,21 @@ export const writeAsStringAsync = async (fileUri, contents, options = {}) => {
 };
 
 export const makeDirectoryAsync = async (dirUri, options = {}) => {
-  return await RNFS.mkdir(clean(dirUri));
+  const cleanPath = clean(dirUri);
+  return await RNFS.mkdir(cleanPath);
+};
+
+export const readDirectoryAsync = async (dirUri) => {
+  const cleanPath = clean(dirUri);
+  try {
+    const exists = await RNFS.exists(cleanPath);
+    if (!exists) return [];
+    const items = await RNFS.readDir(cleanPath);
+    return items.map((item) => item.name);
+  } catch (e) {
+    console.warn('readDirectoryAsync warning:', e);
+    return [];
+  }
 };
 
 export const moveAsync = async ({ from, to }) => {
@@ -38,7 +55,7 @@ export const moveAsync = async ({ from, to }) => {
     // ignore and fallback
   }
 
-  // Fallback if source was virtual/mock: ensure target file exists
+  // Fallback: create valid dummy audio buffer if source was mock
   try {
     const dummyAudio = 'AAAAHGZ0eXBtcDQyAAAAAG1wNDJpc29tYXZjMQAA';
     await RNFS.writeFile(cleanTo, dummyAudio, 'base64').catch(async () => {
@@ -79,7 +96,8 @@ export const getInfoAsync = async (fileUri) => {
       exists: true,
       isDirectory: stat.isDirectory(),
       size: stat.size || 1024,
-      uri: fileUri,
+      modificationTime: stat.mtime ? new Date(stat.mtime).getTime() : Date.now(),
+      uri: fileUri.startsWith('file://') ? fileUri : `file://${fileUri}`,
     };
   } catch (e) {
     return { exists: false, isDirectory: false };
@@ -97,6 +115,7 @@ export default {
   readAsStringAsync,
   writeAsStringAsync,
   makeDirectoryAsync,
+  readDirectoryAsync,
   moveAsync,
   copyAsync,
   deleteAsync,

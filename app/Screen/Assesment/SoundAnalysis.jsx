@@ -216,12 +216,19 @@ const SoundAnalysis = ({ route, navigation }) => {
         return;
       }
 
+      // Ensure proper URI with file:// scheme for React Native Android file upload
+      const fileUri =
+        Platform.OS === "android" && !recordingUri.startsWith("file://")
+          ? `file://${recordingUri}`
+          : recordingUri;
+      const fileName = recordingUri.split("/").pop() || "recording.m4a";
+
       // Create form data
       const formData = new FormData();
       formData.append("audio", {
-        uri: recordingUri,
+        uri: fileUri,
         type: "audio/m4a",
-        name: recordingUri.split("/").pop(),
+        name: fileName,
       });
 
       // Add user data from session
@@ -230,15 +237,25 @@ const SoundAnalysis = ({ route, navigation }) => {
       if (userData.email) formData.append("email", userData.email);
       formData.append("timestamp", new Date().toISOString());
 
-      console.log("Sending audio analysis data to backend");
+      if (health_goal) formData.append("health_goal", String(health_goal));
+      if (age) formData.append("age", String(age));
+      if (weight) formData.append("weight", String(weight));
+      if (mood) formData.append("mood", String(mood));
+      if (sleep_quality) formData.append("sleep_quality", String(sleep_quality));
+
+      console.log("Sending audio analysis data to backend:", {
+        fileUri,
+        fileName,
+        user_id: userData.id,
+      });
 
       // Use the new submitAudioAnalysis function
       const result = await submitAudioAnalysis(formData);
 
       console.log("Server response:", result);
 
-      // If successful, navigate to home screen
-      if (result.success) {
+      // If successful, navigate to results screen
+      if (result.success || result.scores || result.status === "success") {
         // Update session to mark assessment as completed
         const updatedUserData = {
           ...userData,
@@ -249,12 +266,11 @@ const SoundAnalysis = ({ route, navigation }) => {
         await saveSession(updatedUserData);
         console.log("Updated session with hasCompletedAssessment: true");
 
-        // Alert.alert('Success', 'Audio analysis completed successfully!');
         navigation.navigate("ResultsScreen", {
-          scores: result.scores,
-          analysis_id: result.analysis_id,
-          message: result.message,
-          success: result.success,
+          scores: result.scores || {},
+          analysis_id: result.analysis_id || Date.now(),
+          message: result.message || "Audio analysis completed successfully",
+          success: true,
         });
       } else {
         throw new Error(result.message || "Upload failed");

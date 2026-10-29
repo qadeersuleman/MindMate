@@ -120,17 +120,16 @@ export const submitAudioAnalysis = async (audioData) => {
       // Use axios directly for FormData to ensure proper handling
       const response = await api.post('/audio-analysis/', audioData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Accept': 'application/json',
           ...headers,
         },
-        timeout: 30000, // Longer timeout for file uploads
+        transformRequest: (data) => data,
+        timeout: 60000, // Longer timeout for file uploads
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
-            // You can use this for progress indicators if needed
             console.log(`Upload progress: ${percentCompleted}%`);
           }
         },
@@ -146,10 +145,12 @@ export const submitAudioAnalysis = async (audioData) => {
                             error.response.data?.detail ||
                             `Server error occurred: ${error.response.status}`;
         throw new Error(errorMessage);
+      } else if (error.code === 'ECONNABORTED') {
+        throw new Error('Analysis request timed out after 60 seconds.');
       } else if (error.request) {
-        throw new Error('No response received from server. Please check your connection.');
+        throw new Error(`Cannot reach server at ${api.defaults.baseURL}audio-analysis/. Please ensure backend is running at ${api.defaults.baseURL}`);
       } else {
-        throw new Error('Request failed to be created');
+        throw new Error(error.message || 'Request failed to be created');
       }
     }
   } else {
@@ -171,11 +172,11 @@ export const updateUserProfile = async (formData) => {
 
     const response = await api.post('/editprofile/', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
         'Accept': 'application/json',
         ...headers,
       },
-      timeout: 20000, // file upload ke liye thoda zyada time
+      transformRequest: (data) => data,
+      timeout: 30000,
     });
 
     return response.data;

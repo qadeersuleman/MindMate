@@ -1,42 +1,66 @@
 // components/Headers.js
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { LightSpeedInLeft, LightSpeedInRight } from 'react-native-reanimated';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import Animated, { FadeInLeft, FadeInRight } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import Colors from '../../assets/colors';
 
-const Headers = React.memo(({ onBack, currentStep }) => (
-  <Animated.View style={styles.header} entering={LightSpeedInLeft.duration(800)}>
-    <View style={styles.headerLeft}>
-      <TouchableOpacity
-        style={[styles.backButton, { borderColor: Colors.brand.primary }]}
-        onPress={onBack}
-      >
-        <Ionicons name="arrow-back" size={24} color={Colors.brand.primary} />
-      </TouchableOpacity>
-      <Text style={[styles.assessmentText, { color: Colors.brand.primary }]}>
-        Assessment
-      </Text>
+const Headers = React.memo(({ onBack, currentStep }) => {
+  const stepNum = parseInt(currentStep, 10) || 1;
+  const totalSteps = 5;
+  const progressPercent = Math.min((stepNum / totalSteps) * 100, 100);
+
+  return (
+    <View style={styles.headerWrapper}>
+      <Animated.View style={styles.header} entering={FadeInLeft.duration(600)}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={20} color="#1E293B" />
+          </TouchableOpacity>
+          <Text style={styles.assessmentText}>
+            Assessment
+          </Text>
+        </View>
+
+        <Animated.View
+          style={styles.counterContainer}
+          entering={FadeInRight.duration(600)}
+        >
+          <Text style={styles.counterText}>
+            Step {currentStep} of 05
+          </Text>
+        </Animated.View>
+      </Animated.View>
+
+      {/* Modern Sleek Step Progress Line */}
+      <View style={styles.progressBarTrack}>
+        <LinearGradient
+          colors={['#5A8DEE', '#7B61FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.progressBarFill, { width: `${progressPercent}%` }]}
+        />
+      </View>
     </View>
-    <Animated.View
-      style={[styles.counterContainer, { backgroundColor: Colors.accent.coralPastel }]}
-      entering={LightSpeedInRight.duration(800)}
-    >
-      <Text style={[styles.counterText, { color: Colors.accent.coralDark }]}>
-        {currentStep} of 05
-      </Text>
-    </Animated.View>
-  </Animated.View>
-));
+  );
+});
 
 const styles = StyleSheet.create({
+  headerWrapper: {
+    paddingTop: Platform.OS === 'ios' ? 44 : 20,
+    marginBottom: 24,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
-    paddingTop: 50,
+    marginBottom: 14,
     zIndex: 10,
   },
   headerLeft: {
@@ -44,32 +68,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
-    borderWidth: 1.3,
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   assessmentText: {
-    fontWeight: 'bold',
+    fontWeight: '700',
     fontSize: 18,
-    fontFamily: 'Inter-Bold',
+    color: '#0F172A',
+    fontFamily: 'Poppins-SemiBold',
   },
   counterContainer: {
-    borderRadius: 15,
-    paddingVertical: 8,
+    borderRadius: 20,
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    shadowColor: Colors.accent.coralDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: 'rgba(90, 141, 238, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(90, 141, 238, 0.25)',
   },
   counterText: {
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#5A8DEE',
     fontFamily: 'Inter-SemiBold',
+  },
+  progressBarTrack: {
+    height: 4,
+    backgroundColor: '#EEF2F6',
+    borderRadius: 2,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });
 
