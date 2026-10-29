@@ -73,3 +73,11 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+
+# Videos & Large Media
+app/assets/Videos/
+*.mp4
+*.mov
+*.avi
+*.mkv
