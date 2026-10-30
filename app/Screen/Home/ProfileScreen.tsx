@@ -19,7 +19,7 @@ import BottomNavigation from "./BottomNavigation";
 
 const { width } = Dimensions.get("window");
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen({ navigation }: { navigation?: any }) {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -422,6 +422,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  editButton: {},
+  logoutButton: {},
   buttonGradient: {
     padding: 16,
     flexDirection: 'row',

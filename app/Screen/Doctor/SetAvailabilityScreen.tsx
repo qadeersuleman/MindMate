@@ -44,7 +44,7 @@ const SetAvailabilityScreen = ({ navigation }) => {
   const loadAvailabilities = async () => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(() => resolve(null), 1000));
       
       const dummyAvailabilities = [
         {
@@ -123,7 +123,7 @@ const SetAvailabilityScreen = ({ navigation }) => {
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(() => resolve(null), 500));
       // await appointmentAPI.setAvailability({
       //   day_of_week: selectedDay,
       //   start_time: formatTimeForAPI(startTime),
@@ -141,7 +141,7 @@ const SetAvailabilityScreen = ({ navigation }) => {
   const removeAvailability = async (id) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(() => resolve(null), 300));
       // await appointmentAPI.deleteAvailability(id);
       
       Alert.alert('Success', 'Availability removed');

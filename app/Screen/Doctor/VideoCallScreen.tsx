@@ -9,7 +9,8 @@ import {
   Easing,
   SafeAreaView,
   StatusBar,
-  Vibration
+  Vibration,
+  Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import LottieView from 'lottie-react-native';
@@ -19,9 +20,9 @@ import * as Haptics from 'expo-haptics';
 const { width, height } = Dimensions.get('window');
 
 const VideoCallScreen = () => {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { appointmentId, doctorName = 'Dr. Sarah Wilson' } = route.params;
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const { appointmentId, doctorName = 'Dr. Sarah Wilson' } = (route.params as any) || {};
   
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -309,7 +310,7 @@ const VideoCallScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#000" barStyle="light-content" />
+      <StatusBar barStyle="light-content" {...(Platform.OS === 'android' ? { backgroundColor: '#000' } : {})} />
       
       {callStatus === 'connecting' && renderConnectingState()}
       {callStatus === 'connected' && renderConnectedState()}
@@ -376,7 +377,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   videoOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.1)',
   },
   videoOffContainer: {

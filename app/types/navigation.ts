@@ -49,3 +49,4 @@ export type RootStackParamList = {
   } | undefined;
   EmotionsData: undefined;
 };
+

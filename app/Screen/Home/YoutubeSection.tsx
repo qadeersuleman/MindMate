@@ -15,7 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 
 const YoutubeSection = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   // Using reliable thumbnail service with multiple fallbacks
   const getThumbnail = (videoId) => {

@@ -110,7 +110,7 @@ const DoctorRegisterScreen = ({ navigation }) => {
     setLoading(true);
     try {
       // Simulate API call - comment back in later
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(() => resolve(null), 2000));
       // await appointmentAPI.registerDoctor({
       //   ...formData,
       //   experience: parseInt(formData.experience),

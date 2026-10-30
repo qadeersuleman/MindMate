@@ -6,6 +6,7 @@ export const Colors = {
     secondary: '#7B61FF',
     accent: '#3DDAD7',
     primaryDark: '#4568DC',
+    primaryPastel: '#EBF2FE',
   },
 
   // ⚪ Backgrounds & Surfaces
@@ -28,9 +29,11 @@ export const Colors = {
   // 💬 Status / Alerts
   status: {
     success: '#4FD1A6',
+    successLight: '#E8FDF5',
     warning: '#FFB347',
     error: '#F87171',
     info: '#5A8DEE',
+    infoLight: '#EBF2FE',
   },
 
   // 🎨 Accent Colors
@@ -38,6 +41,7 @@ export const Colors = {
     coral: '#F87171',
     coralDark: '#EF4444',
     coralPastel: '#FFE2E2',
+    coralLight: '#FFE2E2',
     teal: '#3DDAD7',
     violet: '#7B61FF',
     lavender: '#E0E7FF',
@@ -51,6 +55,7 @@ export const Colors = {
     therapy: '#4FD1A6',
     mood: '#EF4444',
     ai: '#5A8DEE',
+    community: '#5A8DEE',
   },
 
   // ⚫ Neutrals & Grayscale
@@ -59,6 +64,7 @@ export const Colors = {
     surface: '#FFFFFF',
     surfaceLow: '#EAF1FB',
     border: '#E5E7EB',
+    divider: '#E5E7EB',
     white: '#FFFFFF',
     black: '#000000',
   },
@@ -69,6 +75,7 @@ export const Colors = {
     focus: ['#3DDAD7', '#5A8DEE'],
     energy: ['#FFB347', '#F87171'],
     primary: ['#5A8DEE', '#7B61FF'],
+    sunrise: ['#FF6B6B', '#FFA500'],
   },
 
   // 🪄 UI Elements

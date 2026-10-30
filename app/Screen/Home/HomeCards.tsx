@@ -24,7 +24,7 @@ const HomeCards = () => {
       value: 'Sad',
       status: 'Improving',
       trend: '+12% this week',
-      gradient: Colors.gradients?.sunrise || ['#FF6B6B', '#FFA500']
+      gradient: (Colors.gradients as any)?.sunrise || ['#FF6B6B', '#FFA500']
     },
     {
       id: '3',

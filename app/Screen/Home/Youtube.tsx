@@ -10,7 +10,8 @@ import {
   Dimensions,
   StatusBar,
   SafeAreaView,
-  Linking
+  Linking,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from 'react-native-webview';
@@ -18,7 +19,7 @@ import Colors from "../../assets/colors";
 
 const { width } = Dimensions.get('window');
 
-export default function VideoDetail({ route, navigation }) {
+export default function VideoDetail({ route, navigation }: { route: any; navigation: any }) {
   const { video } = route.params;
   
   const [isPlaying, setIsPlaying] = useState(false);
@@ -144,7 +145,7 @@ export default function VideoDetail({ route, navigation }) {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar 
         barStyle="dark-content" 
-        backgroundColor={Colors.neutrals.background} 
+        {...(Platform.OS === 'android' ? { backgroundColor: Colors.neutrals.background } : {})} 
       />
       
       <View style={styles.container}>
@@ -350,7 +351,7 @@ export default function VideoDetail({ route, navigation }) {
             ]}
           >
             <TouchableOpacity 
-              style={[styles.actionBtn, styles.likeBtn, isLiked && styles.likedBtn]}
+              style={[styles.actionBtn, isLiked && styles.likedBtn]}
               onPress={handleLikePress}
             >
               <Ionicons 
@@ -757,4 +758,6 @@ const styles = StyleSheet.create({
   playingFab: {
     backgroundColor: Colors.accent.teal,
   },
+  shareBtn: {},
+  downloadBtn: {},
 });

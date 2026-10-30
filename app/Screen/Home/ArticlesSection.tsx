@@ -19,7 +19,7 @@ const ArticlesSection = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [articles, setArticles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const isFocused = useIsFocused(); // Hook to detect when screen is focused
 
   // Fetch articles function

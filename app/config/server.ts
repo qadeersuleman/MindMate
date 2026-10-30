@@ -39,3 +39,4 @@ export default {
   API_BASE_URL,
   FASTAPI_URL,
 };
+

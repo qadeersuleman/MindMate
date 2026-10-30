@@ -175,7 +175,7 @@ const notificationsData = [
 ];
 
 // Separate component for NotificationItem
-const NotificationItem = React.memo<any>(({ 
+const NotificationItem: React.FC<any> = React.memo(({ 
   notification, 
   index, 
   onPress 
@@ -466,7 +466,7 @@ const NotificationScreen = ({ navigation }) => {
                     newNotifications.splice(0, 1);
                     return newNotifications;
                   });
-                  resolve();
+                  resolve(null);
                 }, index * 50);
               });
             });
@@ -497,7 +497,7 @@ const NotificationScreen = ({ navigation }) => {
       {/* Status bar remains visible */}
       <StatusBar 
         barStyle="light-content"
-        translucent
+        {...(Platform.OS === 'android' ? { translucent: true } : {})}
       />
       
       {/* Header */}

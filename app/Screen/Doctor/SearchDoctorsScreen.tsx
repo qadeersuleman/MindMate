@@ -16,7 +16,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Colors from "../../assets/colors";
-import { getFontStyle } from "../../assets/config/fonts";
+import { getFontStyle } from "../../config/fonts";
 
 const { width } = Dimensions.get("window");
 
@@ -46,7 +46,7 @@ const SearchDoctorsScreen = ({ navigation }) => {
   const loadTherapists = async (specialization = "") => {
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(() => resolve(null), 1000));
 
       const mentalHealthProfessionals = [
         {

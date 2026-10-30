@@ -17,7 +17,7 @@ import AppointmentDetailScreen from './AppointmentDetailScreen';
 import VideoCallScreen from './VideoCallScreen';
 import ChatScreen from './ChatScreen';
 
-import Colors from '../../assets/colors.jsx';
+import Colors from '../../assets/colors';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

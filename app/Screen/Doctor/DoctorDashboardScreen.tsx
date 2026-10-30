@@ -32,7 +32,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
     try {
       setRefreshing(true);
       // Simulate API calls with dummy data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(() => resolve(null), 1000));
       
       const dummyDoctor = {
         user: { full_name: 'Rehan Rahim' },
@@ -131,7 +131,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
   const updateAppointmentStatus = async (appointmentId, status) => {
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(() => resolve(null), 500));
       Alert.alert('Success', `Appointment ${status}`);
       loadDashboard(); // Refresh data
     } catch (error) {
@@ -245,10 +245,10 @@ const DoctorDashboardScreen = ({ navigation }) => {
     </Animated.View>
   );
 
-  const canJoinCall = (appointment) => {
+  const canJoinCall = (appointment: any) => {
     const appointmentDateTime = new Date(`${appointment.appointment_date}T${appointment.appointment_time}`);
     const now = new Date();
-    const timeDiff = (appointmentDateTime - now) / (1000 * 60); // difference in minutes
+    const timeDiff = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60); // difference in minutes
     return timeDiff <= 30 && timeDiff >= -120; // 30 minutes before to 2 hours after
   };
 
