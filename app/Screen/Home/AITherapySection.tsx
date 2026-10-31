@@ -2,9 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import Colors from '../../assets/colors';
 
 const AITherapySection = () => {
+  const navigation = useNavigation<any>();
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -15,7 +18,11 @@ const AITherapySection = () => {
           </View>
           <Text style={styles.headerTitle}>AI Therapy Assistant</Text>
         </View>
-        <TouchableOpacity style={styles.settingsButton}>
+        <TouchableOpacity 
+          style={styles.settingsButton}
+          onPress={() => navigation.navigate('Settings')}
+          activeOpacity={0.7}
+        >
           <Ionicons name="settings" size={22} color={Colors.text.primary} />
         </TouchableOpacity>
       </View>
@@ -29,17 +36,21 @@ const AITherapySection = () => {
       >
         <View style={styles.statsContent}>
           <View style={styles.statsTextContainer}>
-            <Text style={styles.statsNumber}>2,541</Text>
-            <Text style={styles.statsLabel}>Conversations</Text>
+            <Text style={styles.statsNumber}>MindMate</Text>
+            <Text style={styles.statsLabel}>Compassionate AI Companion</Text>
             
             <View style={styles.usageContainer}>
-              <MaterialIcons name="data-usage" size={16} color={Colors.text.inverted} />
-              <Text style={styles.usageText}>83 sessions left this month</Text>
+              <MaterialIcons name="security" size={16} color={Colors.text.inverted} />
+              <Text style={styles.usageText}>Private & Non-judgmental</Text>
             </View>
             
-            <TouchableOpacity style={styles.proButton}>
-              <MaterialIcons name="star" size={14} color={Colors.accent.coral} />
-              <Text style={styles.proButtonText}>Upgrade to Pro</Text>
+            <TouchableOpacity 
+              style={styles.proButton}
+              onPress={() => navigation.navigate('Chat')}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="chat-bubble" size={14} color={Colors.brand.primary} />
+              <Text style={[styles.proButtonText, { color: Colors.brand.primary }]}>Start Venting</Text>
             </TouchableOpacity>
           </View>
           
@@ -52,21 +63,29 @@ const AITherapySection = () => {
             />
             <View style={styles.statusIndicator}>
               <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Online</Text>
+              <Text style={styles.statusText}>Online 24/7</Text>
             </View>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.newChatButton}>
-            <Ionicons name="add" size={24} color={Colors.text.inverted} />
-            <Text style={styles.newChatText}>New Chat</Text>
+          <TouchableOpacity 
+            style={styles.newChatButton}
+            onPress={() => navigation.navigate('Chat')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="chatbubble-ellipses" size={20} color={Colors.text.inverted} />
+            <Text style={styles.newChatText}>Talk to MindMate</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.quickActionButton}>
+          <TouchableOpacity 
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate('MoodTracker')}
+            activeOpacity={0.85}
+          >
             <Ionicons name="flash" size={20} color={Colors.brand.primary} />
-            <Text style={styles.quickActionText}>Quick Help</Text>
+            <Text style={styles.quickActionText}>Daily Check-in</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>

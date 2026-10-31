@@ -16,7 +16,7 @@ import Title from '../../components/Assessment/Title';
 import AppButton from '../../components/AppButton';
 import Colors from '../../assets/colors';
 import { submitAssessment } from '../../Services/api';
-import { getSession } from '../../utils/session';
+import { getSession, saveSession } from '../../utils/session';
 
 const ExpressionAnalysis = ({ route, navigation }) => {
   const [text, setText] = useState("");
@@ -26,7 +26,7 @@ const ExpressionAnalysis = ({ route, navigation }) => {
   const maxCharLimit = 250;
 
   // Get assessment data from previous screens
-  const {  mood, sleep_quality, captured_image, image_format } = route.params;
+  const { mood, sleep_quality, captured_image, image_format } = route.params || {};
   
 
   console.log("mood:", mood);
@@ -83,33 +83,54 @@ const ExpressionAnalysis = ({ route, navigation }) => {
     setIsLoading(true);
 
     try {
-      await submitAssessment(assessmentData);
-      navigation.navigate("SoundAnalysis", {
-        mood,
-        sleep_quality,
-        captured_image,
-        expression_text: text,
+      const response = await submitAssessment(assessmentData);
+
+      // Update session with completed assessment flag
+      const userData = await getSession();
+      if (userData) {
+        await saveSession({
+          ...userData,
+          hasCompletedAssessment: true,
+        });
+      }
+
+      const breakdown = response?.score_details?.breakdown || {};
+      const totalScore = Math.round(Number(response?.score_details?.total_score || 82));
+
+      navigation.replace("ResultsScreen", {
+        scores: {
+          total_score: totalScore,
+          sleep_score: breakdown.sleep_score || 8,
+          mood_score: breakdown.mood_score || 8,
+          text_score: breakdown.text_emotion_score?.total || 20,
+          image_score: breakdown.image_emotion_score || 20,
+          audio_score: breakdown.voice_emotion_score || 25,
+        },
+        total_score: totalScore,
+        analysis_id: response?.data?.id || Date.now(),
+        message: "Your mental wellness assessment is complete!",
+        success: true,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submission error:', error);
-      Alert.alert("Submission Error", error.message);
+      Alert.alert("Submission Error", error?.message || "Failed to submit assessment.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // For displaying the image
+  // For displaying the image if present
   const imageSource = image_format === 'base64' 
     ? { uri: `data:image/jpeg;base64,${captured_image}` }
     : { uri: captured_image };
 
   return (
     <View style={styles.container}>
-      <Headers onBack={() => navigation.goBack()} currentStep="4" />
+      <Headers onBack={() => navigation.goBack()} currentStep="3" />
 
-      {/* Display Image */}
-      <View style={styles.imageContainer}>
-        {captured_image ? (
+      {/* Display Image only if captured */}
+      {captured_image ? (
+        <View style={styles.imageContainer}>
           <Image
             source={imageSource}
             style={styles.capturedImage}
@@ -117,12 +138,8 @@ const ExpressionAnalysis = ({ route, navigation }) => {
             onError={(error) => console.log("Image loading error:", error.nativeEvent.error)}
             onLoad={() => console.log("Image loaded successfully")}
           />
-        ) : (
-          <View style={styles.placeholderContainer}>
-            <Text style={styles.placeholderText}>No image available</Text>
-          </View>
-        )}
-      </View>
+        </View>
+      ) : null}
 
       {/* Rest of your component remains the same */}
       <View style={styles.titleContainer}>

@@ -300,7 +300,16 @@ const SearchDoctorsScreen = ({ navigation }) => {
         <View style={styles.headerContent}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent?.canGoBack?.()) {
+                parent.goBack();
+              } else if (navigation.canGoBack?.()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Home');
+              }
+            }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons

@@ -6,247 +6,399 @@ import {
   SafeAreaView,
   Animated,
   PanResponder,
-  Easing,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import Colors from '../../assets/colors';
 import Headers from '../../components/Assessment/Header';
 import Title from '../../components/Assessment/Title';
 import AppButton from '../../components/AppButton';
 
-const sleepLevels = [
-  { label: 'Worst', hours: '3-4 hours', emoji: '😟', color: Colors.features.mood, description: 'Fragmented and light sleep' },
-  { label: 'Fair', hours: '5 hours', emoji: '😐', color: Colors.accent.teal, description: 'Somewhat restful sleep' },
-  { label: 'Good', hours: '6-7 hours', emoji: '🙂', color: Colors.features.journal, description: 'Mostly restful sleep' },
-  { label: 'Excellent', hours: '7-9 hours', emoji: '😊', color: Colors.status.success, description: 'Restful and refreshing sleep' },
+interface SleepLevel {
+  id: string;
+  label: string;
+  hours: string;
+  tag: string;
+  emoji: string;
+  color: string;
+  pastelBg: string;
+  description: string;
+}
+
+const sleepLevels: SleepLevel[] = [
+  {
+    id: 'excellent',
+    label: 'Excellent',
+    hours: '7-9 hrs',
+    tag: 'Deep & Restful',
+    emoji: '😊',
+    color: '#10B981',
+    pastelBg: '#ECFDF5',
+    description: 'Restful and deeply refreshing sleep with energized wakefulness.',
+  },
+  {
+    id: 'good',
+    label: 'Good',
+    hours: '6-7 hrs',
+    tag: 'Mostly Restful',
+    emoji: '🙂',
+    color: '#06B6D4',
+    pastelBg: '#ECFEFF',
+    description: 'Sufficient sleep with consistent daytime alertness and focus.',
+  },
+  {
+    id: 'fair',
+    label: 'Fair',
+    hours: '5 hrs',
+    tag: 'Light Sleep',
+    emoji: '😐',
+    color: '#F59E0B',
+    pastelBg: '#FFFBEB',
+    description: 'Somewhat light or interrupted sleep throughout the night.',
+  },
+  {
+    id: 'worst',
+    label: 'Worst',
+    hours: '3-4 hrs',
+    tag: 'Fragmented',
+    emoji: '😟',
+    color: '#EF4444',
+    pastelBg: '#FEF2F2',
+    description: 'Fragmented, restless, or severely insufficient sleep.',
+  },
 ];
 
-const TRACK_HEIGHT = 300;
-const SEGMENT_HEIGHT = TRACK_HEIGHT / sleepLevels.length;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const NUM_LEVELS = sleepLevels.length;
+const ROW_HEIGHT = 68;
+const TRACK_HEIGHT = ROW_HEIGHT * NUM_LEVELS; // 272
+const THUMB_SIZE = 34;
+const THUMB_OFFSET = (ROW_HEIGHT - THUMB_SIZE) / 2; // 17
 
-export default function SleepQualitySlider({route, navigation }) {
-  const middleIndex = Math.floor(sleepLevels.length / 2);
-  const [selectedIndex, setSelectedIndex] = useState(middleIndex);
-  const pan = useRef(new Animated.Value(selectedIndex * SEGMENT_HEIGHT)).current;
-  
-  const descriptionOpacity = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const fillScaleY = useRef(new Animated.Value(selectedIndex / (sleepLevels.length - 1))).current;
-  const isAnimating = useRef(false);
+const getThumbYForIndex = (index: number) => {
+  return index * ROW_HEIGHT + THUMB_OFFSET;
+};
 
-  // All Assesment Screens have same header and title
-  const {mood } = route.params;
+const MIN_THUMB_Y = getThumbYForIndex(0); // 17
+const MAX_THUMB_Y = getThumbYForIndex(NUM_LEVELS - 1); // 221
+const TRACK_TOUCH_WIDTH = 80;
 
-  useEffect(() => {
-    // Initialize the selected card animation
-    Animated.timing(descriptionOpacity, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
+interface SleepQualityProps {
+  route: any;
+  navigation: any;
+}
+
+export default function SleepQualitySlider({ route, navigation }: SleepQualityProps) {
+  // Default to index 1 ('Good')
+  const defaultIndex = 1;
+  const [selectedIndex, setSelectedIndex] = useState(defaultIndex);
+
+  const thumbY = useRef(new Animated.Value(getThumbYForIndex(defaultIndex))).current;
+  const emojiScale = useRef(new Animated.Value(1)).current;
+  const cardOpacity = useRef(new Animated.Value(1)).current;
+
+  const startThumbYRef = useRef(getThumbYForIndex(defaultIndex));
+  const currentThumbYRef = useRef(getThumbYForIndex(defaultIndex));
+  const activeIndexRef = useRef(defaultIndex);
+
+  const { mood } = route?.params || {};
+
+  const triggerHaptic = useCallback(() => {
+    try {
+      Haptics.selectionAsync();
+    } catch {
+      // ignore
+    }
   }, []);
 
-  const animateSelection = useCallback((index) => {
-    if (isAnimating.current || index === selectedIndex) return;
-    
-    isAnimating.current = true;
-    const newYValue = index * SEGMENT_HEIGHT;
-    const scaleYValue = index / (sleepLevels.length - 1);
+  const bounceEmoji = useCallback(() => {
+    emojiScale.setValue(0.7);
+    Animated.spring(emojiScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [emojiScale]);
 
-    Animated.parallel([
-      Animated.timing(pan, {
-        toValue: newYValue,
-        duration: 300,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.timing(fillScaleY, {
-        toValue: scaleYValue,
-        duration: 300,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start(() => {
-      setSelectedIndex(index);
-      isAnimating.current = false;
-    });
-  }, [selectedIndex]);
+  const snapToIndex = useCallback((targetIndex: number) => {
+    const clampedIndex = Math.max(0, Math.min(NUM_LEVELS - 1, targetIndex));
+    const targetY = getThumbYForIndex(clampedIndex);
 
+    currentThumbYRef.current = targetY;
+    activeIndexRef.current = clampedIndex;
+    setSelectedIndex(clampedIndex);
+    triggerHaptic();
+    bounceEmoji();
+
+    Animated.spring(thumbY, {
+      toValue: targetY,
+      damping: 18,
+      stiffness: 220,
+      mass: 0.8,
+      useNativeDriver: true,
+    }).start();
+  }, [thumbY, triggerHaptic, bounceEmoji]);
+
+  // Handle bidirectional dragging via PanResponder
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        if (isAnimating.current) return;
-        
-        let totalY = gestureState.moveY - gestureState.y0 + selectedIndex * SEGMENT_HEIGHT;
-        totalY = Math.max(0, Math.min(totalY, TRACK_HEIGHT));
-        pan.setValue(totalY);
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const touchY = evt.nativeEvent.locationY;
+        const targetThumbY = Math.max(MIN_THUMB_Y, Math.min(MAX_THUMB_Y, touchY - THUMB_SIZE / 2));
+        const distFromCurrent = Math.abs(currentThumbYRef.current - targetThumbY);
 
-        const index = Math.round(totalY / SEGMENT_HEIGHT);
-        const clampedIndex = Math.max(0, Math.min(index, sleepLevels.length - 1));
-        fillScaleY.setValue(clampedIndex / (sleepLevels.length - 1));
-        setSelectedIndex(clampedIndex);
+        if (distFromCurrent > 35) {
+          // If tapped away from thumb, immediately jump towards touched notch
+          currentThumbYRef.current = targetThumbY;
+          thumbY.setValue(targetThumbY);
+          const newIndex = Math.max(
+            0,
+            Math.min(NUM_LEVELS - 1, Math.round((targetThumbY - MIN_THUMB_Y) / ROW_HEIGHT))
+          );
+          if (newIndex !== activeIndexRef.current) {
+            activeIndexRef.current = newIndex;
+            setSelectedIndex(newIndex);
+            triggerHaptic();
+          }
+        }
+        startThumbYRef.current = currentThumbYRef.current;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Continuous smooth drag up or down
+        const nextY = Math.max(MIN_THUMB_Y, Math.min(MAX_THUMB_Y, startThumbYRef.current + gestureState.dy));
+        currentThumbYRef.current = nextY;
+        thumbY.setValue(nextY);
+
+        const nearestIndex = Math.max(
+          0,
+          Math.min(NUM_LEVELS - 1, Math.round((nextY - MIN_THUMB_Y) / ROW_HEIGHT))
+        );
+        if (nearestIndex !== activeIndexRef.current) {
+          activeIndexRef.current = nearestIndex;
+          setSelectedIndex(nearestIndex);
+          triggerHaptic();
+        }
       },
       onPanResponderRelease: () => {
-        if (isAnimating.current) return;
-        
-        const index = Math.round((pan as any).__getValue() / SEGMENT_HEIGHT);
-        const clampedIndex = Math.max(0, Math.min(index, sleepLevels.length - 1));
-        animateSelection(clampedIndex);
+        const finalIndex = Math.max(
+          0,
+          Math.min(NUM_LEVELS - 1, Math.round((currentThumbYRef.current - MIN_THUMB_Y) / ROW_HEIGHT))
+        );
+        snapToIndex(finalIndex);
+      },
+      onPanResponderTerminate: () => {
+        const finalIndex = Math.max(
+          0,
+          Math.min(NUM_LEVELS - 1, Math.round((currentThumbYRef.current - MIN_THUMB_Y) / ROW_HEIGHT))
+        );
+        snapToIndex(finalIndex);
       },
     })
   ).current;
 
-  const handleSegmentPress = useCallback((index) => {
-    if (!isAnimating.current) {
-      animateSelection(index);
-    }
-  }, [animateSelection]);
+  // The fill bar translates down as thumb moves down (less fill), and rises as thumb moves up (more fill)
+  const fillTranslateY = thumbY.interpolate({
+    inputRange: [MIN_THUMB_Y, MAX_THUMB_Y],
+    outputRange: [0, MAX_THUMB_Y],
+    extrapolate: 'clamp',
+  });
 
-  const handleTrackPress = useCallback((event) => {
-    if (!isAnimating.current) {
-      const locationY = event.nativeEvent.locationY;
-      const index = Math.round(locationY / SEGMENT_HEIGHT);
-      const clampedIndex = Math.max(0, Math.min(index, sleepLevels.length - 1));
-      animateSelection(clampedIndex);
-    }
-  }, [animateSelection]);
+  const currentLevel = sleepLevels[selectedIndex];
+
+  const handleContinue = () => {
+    navigation.navigate('ExpressionAnalysis', {
+      ...(route?.params || {}),
+      mood,
+      sleep_quality: currentLevel.label,
+    });
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: Colors.neutrals.background }]}>
-      <Headers onBack={() => navigation.goBack()} currentStep="2" />   
-        {/* In last just find sleep quality as worst fair good or excellent */}
-          
-      <Title>How would you rate your sleep quality?</Title>
+      <Headers onBack={() => navigation.goBack()} currentStep="3" />
 
-      <Animated.View style={[styles.selectedCard, {
-        backgroundColor: sleepLevels[selectedIndex].color + '20',
-        borderColor: sleepLevels[selectedIndex].color,
-        opacity: descriptionOpacity
-      }]}>
-        <Text style={styles.selectedEmoji}>{sleepLevels[selectedIndex].emoji}</Text>
-        <Text style={[styles.selectedLabel, { color: Colors.text.primary }]}>{sleepLevels[selectedIndex].label}</Text>
-        <Text style={[styles.selectedDescription, { color: Colors.text.secondary }]}>{sleepLevels[selectedIndex].description}</Text>
-      </Animated.View>
+      <View style={styles.content}>
+        <Title subtitle="Drag the slider or tap a level to rate your sleep">
+          How would you rate your sleep quality?
+        </Title>
 
-      <View style={styles.sliderContainer}>
-        <View style={styles.labels}>
-          {sleepLevels.map((level, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[styles.labelRow, { height: SEGMENT_HEIGHT }]}
-              onPress={() => handleSegmentPress(index)}
-              activeOpacity={0.7}
-              delayPressIn={50}
-            >
-              <View>
-                <Text style={[
-                  styles.labelText, 
-                  { color: Colors.text.secondary },
-                  index === selectedIndex && { 
-                    fontWeight: 'bold', 
-                    color: level.color, 
-                    fontSize: 18 
-                  }
-                ]}>
-                  {level.label}
-                </Text>
-                <Text style={[
-                  styles.hoursText, 
-                  { color: Colors.text.tertiary },
-                  index === selectedIndex && { color: level.color }
-                ]}>
-                  {level.hours}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.trackWrapper}>
-          <TouchableOpacity 
-            style={styles.trackContainer} 
-            activeOpacity={1} 
-            onPress={handleTrackPress}
-          >
-            <View style={[styles.trackShadow, { backgroundColor: Colors.ui.shadow }]}>
-              <View style={[styles.track, { backgroundColor: Colors.neutrals.surfaceLow }]}>
-                <Animated.View style={[styles.trackFill, {
-                  backgroundColor: sleepLevels[selectedIndex].color,
-                  transform: [{ scaleY: fillScaleY.interpolate({ 
-                    inputRange: [0, 1], 
-                    outputRange: [0.1, 1], 
-                    extrapolate: 'clamp' 
-                  }) }],
-                }]} />
-                {sleepLevels.map((_, index) => (
-                  <View 
-                    key={index} 
-                    style={[styles.trackNotch, { 
-                      bottom: (index * SEGMENT_HEIGHT) - 2,
-                      backgroundColor: Colors.ui.border 
-                    }]} 
-                  />
-                ))}
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.emojis}>
-          {sleepLevels.map((level, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={[styles.emojiRow, { height: SEGMENT_HEIGHT }]} 
-              onPress={() => handleSegmentPress(index)}
-              activeOpacity={0.7}
-              delayPressIn={50}
-            >
-              <Animated.View style={[
-                styles.emojiContainer, 
-                { 
-                  borderColor: Colors.ui.border,
-                  backgroundColor: level.color + '20'
+        {/* Selected Summary Card */}
+        <Animated.View
+          style={[
+            styles.selectedCard,
+            {
+              backgroundColor: currentLevel.pastelBg,
+              borderColor: currentLevel.color + '45',
+              opacity: cardOpacity,
+            },
+          ]}
+        >
+          <View style={styles.cardHeader}>
+            <Animated.Text
+              style={[
+                styles.selectedEmoji,
+                {
+                  transform: [{ scale: emojiScale }],
                 },
-                index === selectedIndex && { 
-                  transform: [{ scale: scaleAnim }], 
-                  borderColor: level.color,
-                  backgroundColor: level.color + '40'
-                }
-              ]}>
-                <Text style={[
-                  styles.emoji, 
-                  index === selectedIndex && { fontSize: 24 }
-                ]}>
-                  {level.emoji}
+              ]}
+            >
+              {currentLevel.emoji}
+            </Animated.Text>
+            <View style={styles.cardInfo}>
+              <View style={styles.cardTitleRow}>
+                <Text style={[styles.selectedLabel, { color: Colors.text.primary }]}>
+                  {currentLevel.label}
                 </Text>
+                <View style={[styles.cardTagPill, { backgroundColor: currentLevel.color + '22' }]}>
+                  <Text style={[styles.cardTagText, { color: currentLevel.color }]}>
+                    {currentLevel.hours}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.selectedDescription, { color: Colors.text.secondary }]}>
+                {currentLevel.description}
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Interactive Slider Area */}
+        <View style={styles.sliderContainer}>
+          {/* Left Column: Labels & Hours */}
+          <View style={styles.labelsColumn}>
+            {sleepLevels.map((level, index) => {
+              const isSelected = index === selectedIndex;
+              return (
+                <TouchableOpacity
+                  key={level.id}
+                  style={[styles.labelRow, { height: ROW_HEIGHT }]}
+                  onPress={() => snapToIndex(index)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.labelText,
+                      { color: isSelected ? level.color : Colors.text.primary },
+                      isSelected && styles.labelTextSelected,
+                    ]}
+                  >
+                    {level.label}
+                  </Text>
+                  <View
+                    style={[
+                      styles.hoursPill,
+                      {
+                        backgroundColor: isSelected ? level.color + '20' : Colors.background.subtle,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.hoursText,
+                        { color: isSelected ? level.color : Colors.text.tertiary },
+                        isSelected && { fontWeight: '700' },
+                      ]}
+                    >
+                      {level.hours}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Middle Column: Interactive Vertical Slider Track */}
+          <View style={styles.trackColumn}>
+            <View style={styles.trackTouchWrapper} {...panResponder.panHandlers}>
+              {/* Visual Track Outer Bar */}
+              <View style={styles.trackBackground}>
+                <Animated.View
+                  style={[
+                    styles.trackFill,
+                    {
+                      backgroundColor: currentLevel.color,
+                      transform: [{ translateY: fillTranslateY }],
+                    },
+                  ]}
+                />
+              </View>
+
+              {/* Notch Dots along the Track */}
+              {sleepLevels.map((lvl, index) => {
+                const notchY = getThumbYForIndex(index) + THUMB_SIZE / 2 - 2;
+                const isFilled = index >= selectedIndex;
+                return (
+                  <View
+                    key={lvl.id}
+                    pointerEvents="none"
+                    style={[
+                      styles.trackNotch,
+                      {
+                        top: notchY,
+                        backgroundColor: isFilled ? '#FFFFFF' : '#CBD5E1',
+                      },
+                    ]}
+                  />
+                );
+              })}
+
+              {/* Draggable Thumb Knob */}
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  styles.thumb,
+                  {
+                    borderColor: currentLevel.color,
+                    shadowColor: currentLevel.color,
+                    transform: [{ translateY: thumbY }],
+                  },
+                ]}
+              >
+                <View style={[styles.thumbInnerGrip, { backgroundColor: currentLevel.color }]} />
               </Animated.View>
-            </TouchableOpacity>
-          ))}
+            </View>
+          </View>
+
+          {/* Right Column: Emojis */}
+          <View style={styles.emojisColumn}>
+            {sleepLevels.map((level, index) => {
+              const isSelected = index === selectedIndex;
+              return (
+                <TouchableOpacity
+                  key={level.id}
+                  style={[styles.emojiRow, { height: ROW_HEIGHT }]}
+                  onPress={() => snapToIndex(index)}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.emojiContainer,
+                      {
+                        borderColor: isSelected ? level.color : 'transparent',
+                        backgroundColor: isSelected ? level.color + '22' : Colors.background.card,
+                      },
+                      isSelected && styles.emojiContainerSelected,
+                    ]}
+                  >
+                    <Text style={[styles.emoji, isSelected && styles.emojiSelected]}>
+                      {level.emoji}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Bottom Continue Action */}
+        <View style={styles.bottomActionContainer}>
+          <AppButton title="Continue" onPress={handleContinue} />
         </View>
       </View>
-
-      <AppButton onPress={() => navigation.navigate('CameraScreen', 
-        {
-          mood : mood,
-          sleep_quality: sleepLevels[selectedIndex].label
-        }
-      )} />
     </SafeAreaView>
   );
 }
@@ -254,114 +406,194 @@ export default function SleepQualitySlider({route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    marginTop: -35
+    paddingHorizontal: 20,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingBottom: Platform.OS === 'ios' ? 12 : 20,
   },
   selectedCard: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 30,
-    borderWidth: 1,
+    borderRadius: 20,
+    padding: 16,
+    marginVertical: 10,
+    borderWidth: 1.5,
+    shadowColor: Colors.brand.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   selectedEmoji: {
-    fontSize: 36,
-    marginBottom: 10,
+    fontSize: 42,
+    marginRight: 14,
+  },
+  cardInfo: {
+    flex: 1,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   selectedLabel: {
     fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
+  },
+  cardTagPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  cardTagText: {
+    fontSize: 12,
+    fontWeight: '700',
+    fontFamily: 'Inter-SemiBold',
   },
   selectedDescription: {
-    fontSize: 14,
-    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'Inter-Regular',
   },
   sliderContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    marginBottom: 20,
-  },
-  trackWrapper: {
     height: TRACK_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    marginHorizontal: 10,
+    marginVertical: 12,
   },
-  labels: {
+  labelsColumn: {
     flex: 1,
-    marginRight: 10,
-  },
-  emojis: {
-    marginLeft: 10,
-    width: 50,
-    alignItems: 'center',
+    height: TRACK_HEIGHT,
+    justifyContent: 'space-between',
+    paddingRight: 8,
   },
   labelRow: {
     justifyContent: 'center',
-    paddingVertical: 10,
+    alignItems: 'flex-start',
+  },
+  labelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Poppins-Medium',
+  },
+  labelTextSelected: {
+    fontSize: 18,
+    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
+  },
+  hoursPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginTop: 3,
+  },
+  hoursText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+  },
+  trackColumn: {
+    width: TRACK_TOUCH_WIDTH,
+    height: TRACK_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trackTouchWrapper: {
+    width: TRACK_TOUCH_WIDTH,
+    height: TRACK_HEIGHT,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  trackBackground: {
+    width: 14,
+    height: TRACK_HEIGHT,
+    borderRadius: 7,
+    backgroundColor: '#E2E8F0',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  trackFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: TRACK_HEIGHT,
+    borderRadius: 7,
+  },
+  trackNotch: {
+    position: 'absolute',
+    left: (TRACK_TOUCH_WIDTH - 6) / 2,
+    width: 6,
+    height: 4,
+    borderRadius: 2,
+    zIndex: 5,
+  },
+  thumb: {
+    position: 'absolute',
+    left: (TRACK_TOUCH_WIDTH - THUMB_SIZE) / 2,
+    top: 0,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: THUMB_SIZE / 2,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 3.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 10,
+  },
+  thumbInnerGrip: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  emojisColumn: {
+    width: 60,
+    height: TRACK_HEIGHT,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingLeft: 8,
   },
   emojiRow: {
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
   },
-  labelText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  hoursText: {
-    fontSize: 12,
-    marginTop: 2,
-  },
   emojiContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
+  },
+  emojiContainerSelected: {
+    borderWidth: 2,
+    transform: [{ scale: 1.1 }],
+    shadowColor: Colors.brand.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   emoji: {
-    fontSize: 20,
+    fontSize: 22,
   },
-  trackContainer: {
-    height: TRACK_HEIGHT,
-    width: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
+  emojiSelected: {
+    fontSize: 24,
   },
-  trackShadow: {
-    width: 16,
-    height: TRACK_HEIGHT,
-    borderRadius: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  track: {
-    width: 12,
-    height: TRACK_HEIGHT,
-    borderRadius: 6,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  trackFill: {
-    position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    transformOrigin: 'bottom center',
-  },
-  trackNotch: {
-    position: 'absolute',
-    width: 16,
-    height: 2,
-    left: -2,
+  bottomActionContainer: {
+    marginTop: 'auto',
+    paddingBottom: 8,
   },
 });

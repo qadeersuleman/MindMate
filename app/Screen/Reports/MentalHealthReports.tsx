@@ -264,7 +264,7 @@ export default function MentalHealthReports({ navigation }) {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <BottomNavigation navigation={navigation} />
+      <BottomNavigation navigation={navigation} currentRoute="Reports" />
 
 
     </View>

@@ -317,15 +317,22 @@ const DoctorDashboardScreen = ({ navigation }) => {
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          {navigation.canGoBack?.() && (
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="arrow-back" size={20} color="#fff" />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => {
+              const parent = navigation.getParent();
+              if (parent?.canGoBack?.()) {
+                parent.goBack();
+              } else if (navigation.canGoBack?.()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('Home');
+              }
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
           <View style={styles.doctorInfo}>
             <View style={styles.avatarLarge}>
               <Ionicons name="medical" size={24} color={Colors.brand.primary} />

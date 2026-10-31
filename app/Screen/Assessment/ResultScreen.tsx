@@ -627,7 +627,7 @@ const MentalHealthResultsScreen = ({ route, navigation }) => {
               try {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               } catch (e) {}
-              navigation.navigate("Home");
+              navigation.navigate("BreathingCompletion");
             }}
           >
             <LinearGradient

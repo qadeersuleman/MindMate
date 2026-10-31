@@ -567,15 +567,22 @@ const PatientDashboardScreen = ({ navigation, route }) => {
           <View style={styles.headerContent}>
             <View style={styles.userInfo}>
               <View style={styles.userTitleRow}>
-                {navigation.canGoBack?.() && (
-                  <TouchableOpacity 
-                    onPress={() => navigation.goBack()} 
-                    style={styles.backButton}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Ionicons name="arrow-back" size={20} color={Colors.text.inverted} />
-                  </TouchableOpacity>
-                )}
+                <TouchableOpacity 
+                  onPress={() => {
+                    const parent = navigation.getParent();
+                    if (parent?.canGoBack?.()) {
+                      parent.goBack();
+                    } else if (navigation.canGoBack?.()) {
+                      navigation.goBack();
+                    } else {
+                      navigation.navigate('Home');
+                    }
+                  }} 
+                  style={styles.backButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons name="arrow-back" size={20} color={Colors.text.inverted} />
+                </TouchableOpacity>
                 <View>
                   <Text style={styles.greeting}>Patient History</Text>
                   <Text style={styles.userName}>{userName}</Text>

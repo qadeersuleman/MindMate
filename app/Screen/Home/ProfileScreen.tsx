@@ -129,23 +129,18 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
           <View style={styles.statsSection}>
             <View style={styles.statCard}>
               <View style={[styles.statIcon, { backgroundColor: Colors.status.success + '20' }]}>
-                <Ionicons name="fitness" size={24} color={Colors.status.success} />
+                <Ionicons name="flame" size={24} color={Colors.status.success} />
               </View>
-              <Text style={styles.statValue}>{userData?.weight || "N/A"}</Text>
-              <Text style={styles.statLabel}>Weight</Text>
+              <Text style={styles.statValue}>5 Days</Text>
+              <Text style={styles.statLabel}>Streak</Text>
             </View>
 
             <View style={styles.statCard}>
               <View style={[styles.statIcon, { backgroundColor: Colors.accent.coral + '20' }]}>
                 <Ionicons name="heart" size={24} color={Colors.accent.coral} />
               </View>
-              <Text style={styles.statValue}>
-                {userData?.date_of_birth ? 
-                  new Date().getFullYear() - new Date(userData.date_of_birth).getFullYear() 
-                  : "N/A"
-                }
-              </Text>
-              <Text style={styles.statLabel}>Age</Text>
+              <Text style={styles.statValue}>14</Text>
+              <Text style={styles.statLabel}>Mood Logs</Text>
             </View>
 
             <View style={styles.statCard}>
@@ -153,7 +148,7 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
                 <Ionicons name="trending-up" size={24} color={Colors.brand.primary} />
               </View>
               <Text style={styles.statValue}>85%</Text>
-              <Text style={styles.statLabel}>Progress</Text>
+              <Text style={styles.statLabel}>Resilience</Text>
             </View>
           </View>
 
@@ -201,8 +196,23 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
             </TouchableOpacity>
 
             <TouchableOpacity 
+              style={[styles.actionButton, { marginBottom: 12 }]}
+              onPress={() => navigation.navigate('Settings')}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#4B6CB7', '#182848']}
+                style={styles.buttonGradient}
+              >
+                <Ionicons name="settings-outline" size={20} color={Colors.text.inverted} />
+                <Text style={styles.buttonText}>Settings & Crisis Help</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
               style={[styles.actionButton, styles.logoutButton]}
               onPress={handleLogout}
+              activeOpacity={0.8}
             >
               <LinearGradient
                 colors={[Colors.status.error, Colors.accent.coralDark]}
@@ -218,7 +228,7 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
         </ScrollView>
 
         {/* Bottom Navigation */}
-        <BottomNavigation navigation={navigation} />
+        <BottomNavigation navigation={navigation} currentRoute="ProfileScreen" />
       </Animated.View>
     </Screen>
   );
