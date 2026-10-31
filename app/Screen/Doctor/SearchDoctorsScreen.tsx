@@ -12,6 +12,7 @@ import {
   Dimensions,
   SafeAreaView,
   Image,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -292,11 +293,15 @@ const SearchDoctorsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View  style={styles.header}>
+      <LinearGradient
+        colors={Colors.gradients.primary}
+        style={styles.header}
+      >
         <View style={styles.headerContent}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons
               name="arrow-back"
@@ -311,7 +316,7 @@ const SearchDoctorsScreen = ({ navigation }) => {
             </Text>
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Search Section */}
       <View style={styles.searchSection}>
@@ -397,14 +402,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutrals.background,
   },
   header: {
-    paddingTop: 40,
-    paddingBottom: 20,
+    paddingTop: Platform.OS === 'ios' ? 48 : 36,
+    paddingBottom: 18,
     paddingHorizontal: 20,
-    backgroundColor: Colors.brand.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.neutrals.border,
-    borderBottomLeftRadius : 40,
-    borderBottomRightRadius : 40
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: "row",
@@ -414,7 +416,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.ui.overlay,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -424,19 +426,19 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...getFontStyle("heading2"),
-    fontSize: 24,
+    fontSize: 18,
+    fontWeight: "700",
     color: Colors.text.inverted,
     marginBottom: 2,
   },
   headerSubtitle: {
     ...getFontStyle("bodyMedium"),
-    fontSize: 14,
-    color: Colors.text.inverted,
-    opacity: 0.9,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.85)",
   },
   searchSection: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 14,
     paddingBottom: 10,
     backgroundColor: Colors.neutrals.surface,
     borderBottomWidth: 1,
@@ -445,12 +447,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.neutrals.background,
+    backgroundColor: "#F8FAFC",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 15,
+    paddingHorizontal: 14,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: Colors.neutrals.border,
+    borderColor: "#E2E8F0",
   },
   searchIcon: {
     marginRight: 10,

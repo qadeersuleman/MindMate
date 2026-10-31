@@ -133,18 +133,25 @@ const BookAppointmentScreen = ({ route, navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View
+      <LinearGradient
+        colors={Colors.gradients.primary}
         style={styles.header}
       >
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Book Appointment</Text>
-        <Text style={styles.subtitle}>Schedule your consultation</Text>
-      </View>
+        <View style={styles.headerTopBar}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.title}>Book Appointment</Text>
+            <Text style={styles.subtitle}>Schedule your consultation</Text>
+          </View>
+          <View style={{ width: 36 }} />
+        </View>
+      </LinearGradient>
 
       <ScrollView 
         style={styles.scrollView}
@@ -193,7 +200,7 @@ const BookAppointmentScreen = ({ route, navigation }) => {
           {/* Time Selection */}
           <View style={styles.inputCard}>
             <View style={styles.inputHeader}>
-              <Ionicons name="time-outline" size={20} col />
+              <Ionicons name="time-outline" size={20} color={Colors.brand.primary} />
               <Text style={styles.inputLabel}>Preferred Time</Text>
             </View>
             <TouchableOpacity 
@@ -247,7 +254,12 @@ const BookAppointmentScreen = ({ route, navigation }) => {
               style={[styles.bookButton, loading && styles.bookButtonDisabled]}
               onPress={handleBookAppointment}
               disabled={loading}
+              activeOpacity={0.85}
             >
+              <LinearGradient
+                colors={Colors.gradients.primary}
+                style={styles.bookButtonGradient}
+              >
                 {loading ? (
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color="#fff" />
@@ -255,11 +267,11 @@ const BookAppointmentScreen = ({ route, navigation }) => {
                   </View>
                 ) : (
                   <View style={styles.buttonContent}>
-                    <Ionicons name="calendar" size={20} color="#fff" />
+                    <Ionicons name="calendar" size={18} color="#fff" />
                     <Text style={styles.bookButtonText}>Confirm Appointment</Text>
                   </View>
                 )}
-             
+              </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
 
@@ -319,31 +331,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingTop: Platform.OS === 'ios' ? 48 : 36,
+    paddingBottom: 22,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    backgroundColor : Colors.brand.primary,
+  },
+  headerTopBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
   },
   backButton: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    zIndex: 10,
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#E2E8F0',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
+    marginTop: 2,
   },
   scrollView: {
     flex: 1,
@@ -352,75 +373,79 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   formContainer: {
-    padding: 20,
-    marginTop: -20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    marginTop: -8,
   },
   doctorCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginTop : 10,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#F1F5F9',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: Colors.brand.primaryPastel,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   doctorInfo: {
     flex: 1,
   },
   doctorName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color : Colors.brand.primary,
-    marginBottom: 4,
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
   },
   doctorSpecialty: {
-    fontSize: 14,
-    color: Colors.text.secondary,
+    fontSize: 13,
+    color: Colors.brand.primary,
     fontWeight: '600',
     marginBottom: 2,
   },
   doctorQualification: {
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.text.tertiary,
   },
   inputCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   inputHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#1E293B',
     marginLeft: 8,
@@ -428,17 +453,17 @@ const styles = StyleSheet.create({
   pickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 14,
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   pickerButtonText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: '#1E293B',
-    marginLeft: 12,
+    marginLeft: 10,
     fontWeight: '500',
   },
   textInputContainer: {
@@ -447,21 +472,21 @@ const styles = StyleSheet.create({
   textArea: {
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+    padding: 14,
+    fontSize: 14,
     color: '#1E293B',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    minHeight: 120,
+    minHeight: 110,
     textAlignVertical: 'top',
   },
   characterCount: {
     position: 'absolute',
-    bottom: 12,
+    bottom: 10,
     right: 12,
   },
   characterCountText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#94A3B8',
   },
   tipsCard: {
@@ -469,37 +494,39 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     backgroundColor: '#FFFBEB',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderLeftWidth: 4,
+    padding: 14,
+    marginBottom: 20,
+    borderLeftWidth: 3,
     borderLeftColor: '#F59E0B',
   },
   tipsText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: '#92400E',
     marginLeft: 8,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   bookButton: {
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: 'hidden',
-    shadowColor: '#6366F1',
+    shadowColor: Colors.brand.primary,
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-    backgroundColor: Colors.brand.primary,
-    paddingVertical : 14,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 5,
   },
   bookButtonDisabled: {
-    shadowOpacity: 0.1,
+    opacity: 0.6,
   },
-  buttonGradient: {
-    padding: 20,
+  bookButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -513,8 +540,8 @@ const styles = StyleSheet.create({
   },
   bookButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '700',
     marginLeft: 8,
   },
   animationContainer: {

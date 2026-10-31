@@ -10,7 +10,8 @@ import {
   Animated,
   Dimensions,
   SafeAreaView,
-  ScrollView
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -316,16 +317,25 @@ const DoctorDashboardScreen = ({ navigation }) => {
         style={styles.header}
       >
         <View style={styles.headerContent}>
+          {navigation.canGoBack?.() && (
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
           <View style={styles.doctorInfo}>
             <View style={styles.avatarLarge}>
-              <Ionicons name="medical" size={32} color={Colors.brand.primary} />
+              <Ionicons name="medical" size={24} color={Colors.brand.primary} />
             </View>
             <View style={styles.doctorDetails}>
               <Text style={styles.doctorName}>Dr. {doctor?.user?.full_name}</Text>
               <Text style={styles.specialization}>{doctor?.specialization}</Text>
               <View style={styles.rating}>
-                <Ionicons name="star" size={14} color="#FFD700" />
-                <Text style={styles.ratingText}>{doctor?.rating} • {doctor?.experience} years exp</Text>
+                <Ionicons name="star" size={12} color="#FFD700" />
+                <Text style={styles.ratingText}>{doctor?.rating} • {doctor?.experience} yrs exp</Text>
               </View>
             </View>
           </View>
@@ -375,72 +385,85 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingTop: Platform.OS === 'ios' ? 48 : 36,
+    paddingBottom: 20,
     paddingHorizontal: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   doctorInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   avatarLarge: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 50,
+    height: 50,
+    borderRadius: 16,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    marginRight: 14,
+    shadowColor: Colors.ui.shadow,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 6,
+    elevation: 3,
   },
   doctorDetails: {
     flex: 1,
   },
   doctorName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   specialization: {
-    fontSize: 16,
-    color: '#E2E8F0',
-    marginBottom: 6,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    marginBottom: 4,
   },
   rating: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   ratingText: {
-    color: '#E2E8F0',
-    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
     marginLeft: 4,
   },
   filterSection: {
-    marginTop: 20,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+    marginTop: 14,
+    marginBottom: 14,
+    paddingHorizontal: 6,
   },
   filterScrollView: {
     flexGrow: 0,
   },
   filterContent: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
   },
   filterTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 25,
-    marginHorizontal: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginHorizontal: 4,
     backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -450,7 +473,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.brand.primary,
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.brand.primary,
     marginLeft: 6,
@@ -461,19 +484,21 @@ const styles = StyleSheet.create({
   listContent: {
     flexGrow: 1,
     paddingBottom: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
   },
   appointmentCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 16,
     marginHorizontal: 10,
     marginBottom: 12,
-    padding: 20,
-    shadowColor: '#000',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',

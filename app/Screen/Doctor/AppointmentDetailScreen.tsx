@@ -8,11 +8,12 @@ import {
   Alert,
   ActivityIndicator,
   Animated,
-  Dimensions
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import Colors from "../../assets/colors.jsx"
+import Colors from "../../assets/colors";
 
 const { width } = Dimensions.get('window');
 
@@ -107,19 +108,26 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={Colors.gradients.calm}
+        colors={Colors.gradients.primary}
         style={styles.headerGradient}
       >
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color={Colors.text.inverted} />
+            <Ionicons name="arrow-back" size={20} color={Colors.text.inverted} />
           </TouchableOpacity>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Appointment Details</Text>
+            <Text style={styles.headerSubtitle}>Session #{appointment?.id || '1'}</Text>
           </View>
+          {appointment?.status && (
+            <View style={styles.statusChip}>
+              <Text style={styles.statusChipText}>{appointment.status.toUpperCase()}</Text>
+            </View>
+          )}
         </View>
       </LinearGradient>
 
@@ -139,23 +147,23 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
           {/* Doctor Card */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="medical-outline" size={20} color={Colors.brand.primary} />
+              <Ionicons name="medical-outline" size={18} color={Colors.brand.primary} />
               <Text style={styles.cardTitle}>Doctor Information</Text>
             </View>
             <View style={styles.doctorInfo}>
               <View style={styles.avatarContainer}>
-                <Text style={styles.avatar}>{appointment.doctor_avatar}</Text>
+                <Ionicons name="person" size={24} color={Colors.brand.primary} />
               </View>
               <View style={styles.doctorDetails}>
                 <Text style={styles.doctorName}>Dr. {appointment.doctor_name}</Text>
                 <Text style={styles.specialization}>{appointment.doctor_specialization}</Text>
                 <View style={styles.doctorMeta}>
                   <View style={styles.metaItem}>
-                    <Ionicons name="school-outline" size={14} color={Colors.text.secondary} />
+                    <Ionicons name="school-outline" size={13} color={Colors.text.secondary} />
                     <Text style={styles.metaText}>{appointment.doctor_qualification}</Text>
                   </View>
                   <View style={styles.metaItem}>
-                    <Ionicons name="time-outline" size={14} color={Colors.text.secondary} />
+                    <Ionicons name="time-outline" size={13} color={Colors.text.secondary} />
                     <Text style={styles.metaText}>{appointment.doctor_experience} years exp.</Text>
                   </View>
                 </View>
@@ -299,60 +307,82 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   headerGradient: {
-    paddingTop: 30,
-    paddingBottom: 30,
+    paddingTop: Platform.OS === 'ios' ? 48 : 36,
+    paddingBottom: 20,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   backButton: {
-    padding: 8,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   headerContent: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.text.inverted,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+  },
+  statusChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  statusChipText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 20,
-    paddingTop: 10,
+    padding: 16,
+    paddingTop: 14,
   },
   card: {
     backgroundColor: Colors.background.card,
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: Colors.ui.shadowStrong,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.text.primary,
     marginLeft: 8,
   },
@@ -361,31 +391,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.background.subtle,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: Colors.brand.primaryPastel,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   avatar: {
-    fontSize: 24,
+    fontSize: 22,
   },
   doctorDetails: {
     flex: 1,
   },
   doctorName: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '700',
     color: Colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   specialization: {
-    fontSize: 16,
+    fontSize: 13,
     color: Colors.brand.primary,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   doctorMeta: {
     flexDirection: 'row',
@@ -394,115 +424,121 @@ const styles = StyleSheet.create({
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
-    marginBottom: 4,
+    marginRight: 14,
+    marginBottom: 2,
   },
   metaText: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.text.secondary,
     marginLeft: 4,
   },
   timeInfo: {
-    gap: 12,
+    gap: 10,
   },
   timeItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   timeDetails: {
-    marginLeft: 12,
+    marginLeft: 10,
   },
   timeLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: Colors.text.secondary,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   timeValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: Colors.text.primary,
   },
   infoText: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 13,
+    lineHeight: 20,
     color: Colors.text.secondary,
   },
   actionCard: {
     backgroundColor: Colors.background.card,
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 14,
     alignItems: 'center',
-    shadowColor: Colors.ui.shadowStrong,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   actionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '700',
     color: Colors.text.primary,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   primaryButton: {
     width: '100%',
     borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 10,
     overflow: 'hidden',
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     gap: 8,
   },
   primaryButtonText: {
     color: Colors.text.inverted,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
   },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: Colors.brand.primary,
     gap: 8,
     width: '100%',
   },
   secondaryButtonText: {
     color: Colors.brand.primary,
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
   },
   footerCard: {
     backgroundColor: Colors.background.card,
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     marginBottom: 20,
-    shadowColor: Colors.ui.shadowStrong,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: Colors.ui.shadow,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   footerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.text.secondary,
     marginLeft: 8,
   },

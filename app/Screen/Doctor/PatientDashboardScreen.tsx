@@ -11,7 +11,8 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Image,
-  ScrollView
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,43 +35,45 @@ import { API_HOST } from '../../config/server';
 const { width, height } = Dimensions.get('window');
 const API_BASE_URL = API_HOST;
 
-// Font configurations
+import Colors from '../../assets/colors';
+
+// Font configurations aligned with app theme
 const Fonts = {
   heading1: {
     fontFamily: 'System',
     fontWeight: '700',
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 24,
+    lineHeight: 30,
   },
   heading2: {
     fontFamily: 'System',
-    fontWeight: '600',
-    fontSize: 22,
-    lineHeight: 28,
+    fontWeight: '700',
+    fontSize: 20,
+    lineHeight: 26,
   },
   heading3: {
     fontFamily: 'System',
     fontWeight: '600',
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 16,
+    lineHeight: 22,
   },
   titleMedium: {
     fontFamily: 'System',
-    fontWeight: '500',
-    fontSize: 16,
-    lineHeight: 22,
+    fontWeight: '600',
+    fontSize: 15,
+    lineHeight: 20,
   },
   bodyLarge: {
     fontFamily: 'System',
     fontWeight: '400',
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 21,
   },
   bodyMedium: {
     fontFamily: 'System',
     fontWeight: '400',
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   bodySmall: {
     fontFamily: 'System',
@@ -81,12 +84,12 @@ const Fonts = {
   buttonPrimary: {
     fontFamily: 'System',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
   },
   buttonSecondary: {
     fontFamily: 'System',
     fontWeight: '500',
-    fontSize: 14,
+    fontSize: 13,
   },
   caption: {
     fontFamily: 'System',
@@ -95,54 +98,6 @@ const Fonts = {
     lineHeight: 14,
   },
 } as const;
-
-// Color configurations
-const Colors = {
-  brand: {
-    primary: '#5D5FEF',
-    primaryLight: '#7B7DF1',
-    primaryDark: '#4A4BCC',
-  },
-  accent: {
-    coral: '#FF6B6B',
-    teal: '#4ECDC4',
-    lavender: '#A78BFA',
-    mint: '#81D8D0',
-  },
-  features: {
-    mindfulness: '#FF9A76',
-    meditation: '#6A67CE',
-    journal: '#4ECDC4',
-  },
-  status: {
-    success: '#10B981',
-    warning: '#F59E0B',
-    error: '#EF4444',
-    info: '#3B82F6',
-  },
-  text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
-    tertiary: '#9CA3AF',
-    inverted: '#FFFFFF',
-  },
-  neutrals: {
-    background: '#F9FAFB',
-    surface: '#FFFFFF',
-    surfaceLow: '#F3F4F6',
-    border: '#E5E7EB',
-    white: '#FFFFFF',
-  },
-  ui: {
-    overlay: 'rgba(255,255,255,0.1)',
-    shadowDark: 'rgba(0,0,0,0.08)',
-  },
-  gradients: {
-    primary: ['#5D5FEF', '#7B7DF1'],
-    secondary: ['#FF6B6B', '#FF8E8E'],
-    success: ['#10B981', '#34D399'],
-  },
-};
 
 // Reanimated Animated components
 const ReanimatedView = Animated.createAnimatedComponent(View);
@@ -160,10 +115,10 @@ const PatientDashboardScreen = ({ navigation, route }) => {
   const [stats, setStats] = useState({ upcoming: 0, completed: 0, total: 0 });
 
   // Reanimated shared values
-  const headerHeight = useSharedValue(250);
+  const headerHeight = useSharedValue(215);
   const headerOpacity = useSharedValue(1);
   const scrollY = useSharedValue(0);
-  const cardScale = useSharedValue(0.95);
+  const cardScale = useSharedValue(0.98);
   const fadeValue = useSharedValue(0);
 
   // Ref for scrollview
@@ -428,21 +383,26 @@ const PatientDashboardScreen = ({ navigation, route }) => {
     }
   };
 
-  // Get status color
-  const getStatusColor = (status) => {
-    const colors = {
-      scheduled: Colors.status.info,
-      confirmed: Colors.status.success,
-      completed: Colors.brand.primary,
-      cancelled: Colors.status.error,
-      pending: Colors.text.tertiary,
-    };
-    return colors[status] || Colors.text.tertiary;
+  // Get status styling
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return { bg: '#E8FDF5', text: '#10B981', border: '#A7F3D0' };
+      case 'scheduled':
+        return { bg: '#EBF2FE', text: '#5A8DEE', border: '#BFDBFE' };
+      case 'completed':
+        return { bg: '#F3E8FF', text: '#7B61FF', border: '#DDD6FE' };
+      case 'cancelled':
+        return { bg: '#FEE2E2', text: '#EF4444', border: '#FECACA' };
+      default:
+        return { bg: '#F3F4F6', text: '#6B7280', border: '#E5E7EB' };
+    }
   };
 
   // Render appointment card
   const renderAppointment = ({ item, index }) => {
     const enteringAnimation = SlideInRight.delay(index * 100).springify().damping(15);
+    const statusStyle = getStatusStyle(item.status);
     
     return (
       <ReanimatedView
@@ -468,13 +428,13 @@ const PatientDashboardScreen = ({ navigation, route }) => {
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={12} color={Colors.accent.coral} />
                 <Text style={styles.ratingText}>
-                  {item.doctor_rating} • {item.doctor_experience} yrs
+                  {item.doctor_rating} • {item.doctor_experience} yrs exp
                 </Text>
               </View>
             </View>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-            <Text style={styles.statusText}>
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg, borderColor: statusStyle.border }]}>
+            <Text style={[styles.statusText, { color: statusStyle.text }]}>
               {item.status.toUpperCase()}
             </Text>
           </View>
@@ -576,13 +536,13 @@ const PatientDashboardScreen = ({ navigation, route }) => {
     const offsetY = event.nativeEvent.contentOffset.y;
     scrollY.value = offsetY;
     
-    // Animate header on scroll
-    if (offsetY > 50) {
-      headerHeight.value = withTiming(200, { duration: 200 });
-      headerOpacity.value = withTiming(0.95, { duration: 200 });
+    // Smooth subtle header compression on scroll
+    if (offsetY > 40) {
+      headerHeight.value = withTiming(170, { duration: 180 });
+      headerOpacity.value = withTiming(0.98, { duration: 180 });
     } else {
-      headerHeight.value = withTiming(250, { duration: 200 });
-      headerOpacity.value = withTiming(1, { duration: 200 });
+      headerHeight.value = withTiming(215, { duration: 180 });
+      headerOpacity.value = withTiming(1, { duration: 180 });
     }
   };
 
@@ -606,9 +566,20 @@ const PatientDashboardScreen = ({ navigation, route }) => {
         >
           <View style={styles.headerContent}>
             <View style={styles.userInfo}>
-              <View>
-                <Text style={styles.greeting}>Hello,</Text>
-                <Text style={styles.userName}>{userName}</Text>
+              <View style={styles.userTitleRow}>
+                {navigation.canGoBack?.() && (
+                  <TouchableOpacity 
+                    onPress={() => navigation.goBack()} 
+                    style={styles.backButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Ionicons name="arrow-back" size={20} color={Colors.text.inverted} />
+                  </TouchableOpacity>
+                )}
+                <View>
+                  <Text style={styles.greeting}>Patient History</Text>
+                  <Text style={styles.userName}>{userName}</Text>
+                </View>
               </View>
               <TouchableOpacity onPress={handleLogout} style={styles.avatarContainer}>
                 {userImage ? (
@@ -616,7 +587,7 @@ const PatientDashboardScreen = ({ navigation, route }) => {
                 ) : (
                   <View style={styles.defaultAvatar}>
                     <Text style={styles.avatarText}>
-                      {userName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {userName ? userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ME'}
                     </Text>
                   </View>
                 )}
@@ -780,26 +751,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    elevation: 10,
+    elevation: 8,
     shadowColor: Colors.ui.shadowDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
   headerGradient: {
     height: '100%',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     overflow: 'hidden',
   },
   headerContent: {
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 24,
+    paddingTop: Platform.OS === 'ios' ? 48 : 32,
+    paddingBottom: 16,
   },
   contentContainer: {
     flex: 1,
-    marginTop: 250,
+    marginTop: 215,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -808,23 +779,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 8,
+  },
+  userTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   greeting: {
-    ...Fonts.bodyMedium,
+    ...Fonts.bodySmall,
     color: Colors.text.inverted,
-    opacity: 0.9,
+    opacity: 0.85,
+    fontWeight: '500',
   },
   userName: {
     ...Fonts.heading2,
     color: Colors.text.inverted,
-    marginTop: 2,
-    fontSize: 24,
+    marginTop: 1,
+    fontSize: 18,
   },
   avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.3)',
@@ -832,38 +818,39 @@ const styles = StyleSheet.create({
   avatar: {
     width: '100%',
     height: '100%',
-    borderRadius: 25,
+    borderRadius: 22,
   },
   defaultAvatar: {
     width: '100%',
     height: '100%',
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     color: Colors.text.inverted,
-    ...Fonts.heading3,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '700',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 20,
-    padding: 20,
-    marginHorizontal: -10,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 16,
+    padding: 12,
+    marginHorizontal: 0,
+    marginTop: 10,
   },
   statCard: {
     alignItems: 'center',
     flex: 1,
   },
   statNumber: {
-    ...Fonts.heading1,
+    fontSize: 20,
+    fontWeight: '700',
     color: Colors.text.inverted,
-    marginBottom: 4,
-    fontSize: 26,
+    marginBottom: 2,
   },
   statLabel: {
     ...Fonts.caption,
@@ -874,17 +861,17 @@ const styles = StyleSheet.create({
   },
   filterSection: {
     marginTop: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   filterContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   filterPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginRight: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    marginRight: 8,
     backgroundColor: Colors.neutrals.surface,
     borderWidth: 1,
     borderColor: Colors.neutrals.border,
@@ -897,9 +884,11 @@ const styles = StyleSheet.create({
     ...Fonts.bodySmall,
     color: Colors.text.tertiary,
     fontWeight: '500',
+    fontSize: 13,
   },
   filterTextActive: {
     color: Colors.text.inverted,
+    fontWeight: '600',
   },
   listSection: {
     paddingHorizontal: 20,
@@ -908,26 +897,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
   },
   sectionTitle: {
     ...Fonts.heading3,
     color: Colors.text.primary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   sectionCount: {
     ...Fonts.bodySmall,
     color: Colors.text.tertiary,
+    fontSize: 12,
   },
   appointmentCard: {
     backgroundColor: Colors.neutrals.surface,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: Colors.ui.shadowDark,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 6,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+    shadowColor: Colors.ui.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
     borderColor: Colors.neutrals.border,
   },
@@ -935,7 +927,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   doctorInfo: {
     flexDirection: 'row',
@@ -946,11 +938,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   doctorImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     marginRight: 12,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: Colors.neutrals.border,
   },
   doctorDetails: {
@@ -965,8 +957,10 @@ const styles = StyleSheet.create({
   },
   specialization: {
     ...Fonts.caption,
-    color: Colors.text.secondary,
-    marginBottom: 6,
+    color: Colors.brand.primary,
+    fontWeight: '500',
+    marginBottom: 4,
+    fontSize: 12,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -976,98 +970,106 @@ const styles = StyleSheet.create({
     ...Fonts.caption,
     color: Colors.text.tertiary,
     marginLeft: 4,
+    fontSize: 11,
   },
   statusBadge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 8,
+    borderWidth: 1,
     marginLeft: 8,
   },
   statusText: {
-    color: Colors.text.inverted,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   cardBody: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   symptoms: {
     ...Fonts.bodyMedium,
     color: Colors.text.secondary,
-    marginBottom: 16,
-    lineHeight: 22,
+    marginBottom: 12,
+    lineHeight: 18,
+    fontSize: 13,
   },
   timeContainer: {
     backgroundColor: Colors.neutrals.surfaceLow,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 10,
   },
   timeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   timeText: {
     ...Fonts.bodySmall,
     color: Colors.text.secondary,
     marginLeft: 8,
     flex: 1,
+    fontSize: 12,
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   primaryButton: {
     flex: 2,
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
   primaryButtonText: {
     ...Fonts.buttonPrimary,
     color: Colors.text.inverted,
-    marginLeft: 8,
+    marginLeft: 6,
+    fontSize: 13,
   },
   secondaryButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: Colors.neutrals.border,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: Colors.neutrals.surface,
   },
   secondaryButtonText: {
     ...Fonts.buttonSecondary,
     color: Colors.brand.primary,
-    marginLeft: 6,
+    marginLeft: 4,
+    fontSize: 13,
+    fontWeight: '600',
   },
   completedButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: Colors.neutrals.border,
-    borderRadius: 12,
+    borderRadius: 10,
     backgroundColor: Colors.neutrals.surface,
   },
   completedButtonText: {
     ...Fonts.buttonSecondary,
     color: Colors.brand.primary,
-    marginLeft: 8,
+    marginLeft: 6,
+    fontSize: 13,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
