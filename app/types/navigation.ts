@@ -6,7 +6,7 @@ export type RootStackParamList = {
   Signup: undefined;
   ForgetPassword: undefined;
   AuthSuccess: undefined;
-  EditProfile: { username?: string } | undefined;
+  EditProfile: { username?: string; isFirstTimeSignup?: boolean; isNewUser?: boolean } | undefined;
   HealthGoal: undefined;
   AgeSelection: { health_goal?: string } | undefined;
   WeightSelection: { health_goal?: string; age?: string } | undefined;

@@ -203,7 +203,11 @@ export default function MentalHealthReports({ navigation }) {
   return (
     <Screen>
       <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
 
         {/* Chart Section */}
         <Animated.View 
@@ -279,7 +283,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginBottom: 80, // Add margin to prevent content from being hidden behind navigation
   },
 
   tabSection: {

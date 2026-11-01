@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Animated, {
@@ -11,15 +11,11 @@ import Animated, {
   Easing,
   withDelay,
 } from "react-native-reanimated";
-import Colors from "../../assets/colors"; // Import your colors file
-
-import { getSession } from "../../utils/session";
-
-// Mock session function for testing
+import Colors from "../../assets/colors";
+import { useUserSession } from "../../hooks/useQueries";
 
 const HeaderProfile = ({ navigation }) => {
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user: userData, isLoading: loading } = useUserSession();
 
   // Animation values using Reanimated
   const fadeAnim = useSharedValue(0);
@@ -37,35 +33,20 @@ const HeaderProfile = ({ navigation }) => {
   });
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const sessionData = await getSession();
-        setUserData(sessionData);
+    fadeAnim.value = withTiming(1, { duration: 800 });
+    slideAnim.value = withSpring(0, { damping: 10, stiffness: 100 });
+    scaleAnim.value = withSpring(1, { damping: 10, stiffness: 100 });
+    profileScale.value = withSpring(1, { damping: 10, stiffness: 100 });
 
-        // Start animations after data is loaded
-        fadeAnim.value = withTiming(1, { duration: 800 });
-        slideAnim.value = withSpring(0, { damping: 10, stiffness: 100 });
-        scaleAnim.value = withSpring(1, { damping: 10, stiffness: 100 });
-        profileScale.value = withSpring(1, { damping: 10, stiffness: 100 });
-
-        // Notification badge pulse animation
-        notificationPulse.value = withRepeat(
-          withSequence(
-            withTiming(1.2, { duration: 500 }),
-            withTiming(1, { duration: 500 })
-          ),
-          -1, // Infinite repetition
-          true
-        );
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, []);
+    notificationPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 500 }),
+        withTiming(1, { duration: 500 })
+      ),
+      -1,
+      true
+    );
+  }, [userData]);
 
   // Animated styles
   const containerStyle = useAnimatedStyle(() => {

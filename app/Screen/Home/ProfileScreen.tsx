@@ -12,36 +12,23 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { getSession, clearSession } from "../../utils/session";
+import { clearSession } from "../../utils/session";
 import Colors from "../../assets/colors";
 import Screen from "../../components/Screen";
 import BottomNavigation from "./BottomNavigation";
+import { useUserSession } from "../../hooks/useQueries";
 
 const { width } = Dimensions.get("window");
 
 export default function ProfileScreen({ navigation }: { navigation?: any }) {
-  const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user: userData, isLoading } = useUserSession();
 
   // Simple animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    loadUserData();
     startAnimations();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const session = await getSession();
-      console.log("User session:", session); // Debug log
-      setUserData(session);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error loading user data:", error);
-      setIsLoading(false);
-    }
-  };
+  }, [userData]);
 
   const startAnimations = () => {
     Animated.timing(fadeAnim, {
@@ -61,13 +48,17 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
   const performLogout = async () => {
     try {
       await clearSession();
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" }],
-      });
     } catch (error) {
-      console.error("Logout error:", error);
-      Alert.alert("Error", "Failed to logout. Please try again.");
+      console.warn("Logout session clear error:", error);
+    } finally {
+      if (navigation?.reset) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Login" }],
+        });
+      } else if (navigation?.navigate) {
+        navigation.navigate("Login");
+      }
     }
   };
 
@@ -184,7 +175,7 @@ export default function ProfileScreen({ navigation }: { navigation?: any }) {
           <View style={styles.actionsSection}>
             <TouchableOpacity 
               style={[styles.actionButton, styles.editButton]}
-              onPress={() => navigation.navigate('EditProfile')}
+              onPress={() => navigation.navigate('EditProfile', { isFirstTimeSignup: false, isNewUser: false })}
             >
               <LinearGradient
                 colors={Colors.gradients.calm}
@@ -264,7 +255,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 130,
   },
   headerSection: {
     margin: 16,

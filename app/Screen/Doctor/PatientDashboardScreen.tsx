@@ -17,6 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearSession } from '../../utils/session';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -517,13 +518,18 @@ const PatientDashboardScreen = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await AsyncStorage.removeItem('userData');
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              await clearSession();
             } catch (error) {
-              console.error('Logout error:', error);
+              console.warn('Logout session clear error:', error);
+            } finally {
+              if (navigation?.reset) {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              } else if (navigation?.navigate) {
+                navigation.navigate('Login');
+              }
             }
           }
         }
@@ -780,7 +786,7 @@ const styles = StyleSheet.create({
     marginTop: 215,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 130,
   },
   userInfo: {
     flexDirection: 'row',

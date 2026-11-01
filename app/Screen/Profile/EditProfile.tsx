@@ -35,12 +35,36 @@ import { getSession, saveSession } from "../../utils/session";
 import { updateUserProfile } from "../../Services/api";
 import Colors from "../../assets/colors";
 import SuccessModal from "../../components/SuccessModal";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../hooks/useQueries";
 
 const { width, height } = Dimensions.get("window");
 const isSmallDevice = width < 375;
 
 const EditProfile = ({ navigation, route }) => {
-  const { username } = route.params || {};
+  const queryClient = useQueryClient();
+  const routeParams = route?.params || {};
+  const { username } = routeParams;
+
+  const formikRef = useRef<any>(null);
+  const [existingUserSession, setExistingUserSession] = useState<any>(null);
+
+  // Determine if this is a first-time signup/onboarding flow or normal profile edit
+  const isFirstTimeSignup =
+    routeParams.isFirstTimeSignup === true ||
+    routeParams.isNewUser === true ||
+    (routeParams.isFirstTimeSignup !== false &&
+      existingUserSession !== null &&
+      !existingUserSession?.hasCompletedProfile &&
+      !existingUserSession?.hasCompletedAssessment);
+
+  const [initialFormValues, setInitialFormValues] = useState({
+    fullName: username || "",
+    gender: "",
+    birthDate: null as Date | null,
+    countryCode: "+92",
+    phoneNumber: "",
+  });
 
   const [profileImage, setProfileImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -56,6 +80,59 @@ const EditProfile = ({ navigation, route }) => {
   const slideUpAnim = useRef(new Animated.Value(30)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
   const imageScale = useRef(new Animated.Value(1)).current;
+
+  // Load existing profile from session on mount for automatic autofill
+  useEffect(() => {
+    loadExistingProfile();
+  }, []);
+
+  const loadExistingProfile = async () => {
+    try {
+      const session = await getSession();
+      if (session) {
+        setExistingUserSession(session);
+
+        let countryCode = "+92";
+        let phoneNumber = "";
+        const rawPhone = session.phone_number || "";
+
+        if (rawPhone.startsWith("+")) {
+          const matchedCountry = countryOptions.find((c) => rawPhone.startsWith(c.code));
+          if (matchedCountry) {
+            countryCode = matchedCountry.code;
+            phoneNumber = rawPhone.slice(matchedCountry.code.length);
+          } else {
+            countryCode = rawPhone.slice(0, 3);
+            phoneNumber = rawPhone.slice(3);
+          }
+        } else if (rawPhone) {
+          phoneNumber = rawPhone;
+        }
+
+        let birthDate: Date | null = null;
+        if (session.date_of_birth) {
+          const parsed = new Date(session.date_of_birth);
+          if (!isNaN(parsed.getTime())) {
+            birthDate = parsed;
+          }
+        }
+
+        if (session.profile_image) {
+          setProfileImage(session.profile_image);
+        }
+
+        setInitialFormValues({
+          fullName: session.full_name || session.name || session.username || username || "",
+          gender: (session.gender || "").toLowerCase(),
+          birthDate: birthDate,
+          countryCode: countryCode,
+          phoneNumber: phoneNumber,
+        });
+      }
+    } catch (e) {
+      console.error("Error loading existing profile:", e);
+    }
+  };
 
   const genderOptions = [
     { label: "Male", value: "male", icon: "male", color: Colors.brand.primary },
@@ -206,8 +283,15 @@ const EditProfile = ({ navigation, route }) => {
         profile_image: response.user?.profile_image || profileImage,
       };
       await saveSession(updatedUser);
+      setExistingUserSession(updatedUser);
+      queryClient.setQueryData(QUERY_KEYS.SESSION, updatedUser);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSION });
 
-      setModalMessage("Your profile has been updated successfully!");
+      if (isFirstTimeSignup) {
+        setModalMessage("Your profile has been created! Let's continue to your assessment.");
+      } else {
+        setModalMessage("Your profile details have been updated successfully.");
+      }
       setIsModalVisible(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -219,9 +303,17 @@ const EditProfile = ({ navigation, route }) => {
     }
   };
 
-  const handleRedirectToHealthGoal = () => {
+  const handleSuccessRedirect = () => {
     setIsModalVisible(false);
-    navigation.navigate("HealthGoal");
+    if (isFirstTimeSignup) {
+      navigation.navigate("HealthGoal");
+    } else {
+      if (navigation?.canGoBack?.()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate("ProfileScreen");
+      }
+    }
   };
 
   const formatDate = (date) => {
@@ -245,17 +337,27 @@ const EditProfile = ({ navigation, route }) => {
         <View style={styles.topBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              if (navigation?.canGoBack?.()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate(isFirstTimeSignup ? "Login" : "ProfileScreen");
+              }
+            }}
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={22} color="#1E293B" />
           </TouchableOpacity>
 
           <View style={styles.topBarCenter}>
-            <View style={styles.stepBadgeContainer}>
-              <Text style={styles.stepBadgeText}>STEP 2 OF 2</Text>
-            </View>
-            <Text style={styles.topBarTitle}>Complete Profile</Text>
+            {isFirstTimeSignup && (
+              <View style={styles.stepBadgeContainer}>
+                <Text style={styles.stepBadgeText}>STEP 2 OF 2</Text>
+              </View>
+            )}
+            <Text style={styles.topBarTitle}>
+              {isFirstTimeSignup ? "Complete Profile" : "Edit Profile"}
+            </Text>
           </View>
 
           <View style={styles.topBarRightSpacer} />
@@ -309,13 +411,9 @@ const EditProfile = ({ navigation, route }) => {
 
             {/* Form */}
             <Formik
-              initialValues={{
-                fullName: username || "",
-                gender: "",
-                birthDate: null,
-                countryCode: "+92",
-                phoneNumber: "",
-              }}
+              innerRef={formikRef}
+              enableReinitialize
+              initialValues={initialFormValues}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
@@ -506,9 +604,18 @@ const EditProfile = ({ navigation, route }) => {
                           style={styles.submitGradient}
                         >
                           <Text style={styles.submitButtonText}>
-                            {isSubmitting ? "Saving Profile..." : "Save & Continue"}
+                            {isSubmitting
+                              ? "Saving Profile..."
+                              : isFirstTimeSignup
+                              ? "Continue to Assessment"
+                              : "Save Changes"}
                           </Text>
-                          <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
+                          <Ionicons
+                            name={isFirstTimeSignup ? "arrow-forward" : "checkmark-circle-outline"}
+                            size={20}
+                            color="#FFFFFF"
+                            style={{ marginLeft: 8 }}
+                          />
                         </LinearGradient>
                       </TouchableOpacity>
                     </Animated.View>
@@ -597,27 +704,48 @@ const EditProfile = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
 
-              <Formik initialValues={{}} onSubmit={() => {}}>
-                {({ setFieldValue }) => (
-                  <View style={styles.dialogList}>
-                    {genderOptions.map((opt) => (
-                      <TouchableOpacity
-                        key={opt.value}
-                        style={styles.dialogItem}
-                        onPress={() => {
-                          setFieldValue("gender", opt.value);
-                          setGenderModalVisible(false);
-                        }}
+              <View style={styles.dialogList}>
+                {genderOptions.map((opt) => {
+                  const isSelected = formikRef.current?.values?.gender === opt.value;
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      style={[
+                        styles.dialogItem,
+                        isSelected && { backgroundColor: opt.color + "12" },
+                      ]}
+                      onPress={() => {
+                        formikRef.current?.setFieldValue("gender", opt.value);
+                        setGenderModalVisible(false);
+                        try {
+                          Haptics.selectionAsync();
+                        } catch {}
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.dialogItemIcon, { backgroundColor: opt.color + "18" }]}>
+                        <Ionicons name={opt.icon as any} size={20} color={opt.color} />
+                      </View>
+                      <Text
+                        style={[
+                          styles.dialogItemLabel,
+                          isSelected && { fontWeight: "700", color: opt.color },
+                        ]}
                       >
-                        <View style={[styles.dialogItemIcon, { backgroundColor: opt.color + "18" }]}>
-                          <Ionicons name={opt.icon} size={20} color={opt.color} />
-                        </View>
-                        <Text style={styles.dialogItemLabel}>{opt.label}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </Formik>
+                        {opt.label}
+                      </Text>
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color={opt.color}
+                          style={{ marginLeft: "auto" }}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </TouchableOpacity>
         </Modal>
@@ -642,28 +770,48 @@ const EditProfile = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
 
-              <Formik initialValues={{}} onSubmit={() => {}}>
-                {({ setFieldValue }) => (
-                  <View style={styles.dialogList}>
-                    {countryOptions.map((item) => (
-                      <TouchableOpacity
-                        key={item.code}
-                        style={styles.dialogItem}
-                        onPress={() => {
-                          setFieldValue("countryCode", item.code);
-                          setCountryModalVisible(false);
-                        }}
-                      >
-                        <Text style={styles.countryFlagLarge}>{item.flag}</Text>
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                          <Text style={styles.countryNameText}>{item.name}</Text>
-                          <Text style={styles.countryCodeSub}>{item.code}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </Formik>
+              <View style={styles.dialogList}>
+                {countryOptions.map((item) => {
+                  const isSelected = formikRef.current?.values?.countryCode === item.code;
+                  return (
+                    <TouchableOpacity
+                      key={item.code}
+                      style={[
+                        styles.dialogItem,
+                        isSelected && { backgroundColor: Colors.brand.primary + "12" },
+                      ]}
+                      onPress={() => {
+                        formikRef.current?.setFieldValue("countryCode", item.code);
+                        setCountryModalVisible(false);
+                        try {
+                          Haptics.selectionAsync();
+                        } catch {}
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.countryFlagLarge}>{item.flag}</Text>
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text
+                          style={[
+                            styles.countryNameText,
+                            isSelected && { fontWeight: "700", color: Colors.brand.primary },
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                        <Text style={styles.countryCodeSub}>{item.code}</Text>
+                      </View>
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color={Colors.brand.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </TouchableOpacity>
         </Modal>
@@ -671,12 +819,29 @@ const EditProfile = ({ navigation, route }) => {
         {/* Success Modal */}
         <SuccessModal
           isVisible={isModalVisible}
-          onClose={() => setIsModalVisible(false)}
-          title="Profile Updated!"
-          message={modalMessage || "Your profile has been updated successfully!"}
-          redirectTo="HealthGoal"
-          autoRedirectDuration={4000}
-          onRedirect={handleRedirectToHealthGoal}
+          onClose={() => {
+            setIsModalVisible(false);
+            if (!isFirstTimeSignup) {
+              if (navigation?.canGoBack?.()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate("ProfileScreen");
+              }
+            }
+          }}
+          title={isFirstTimeSignup ? "Profile Completed!" : "Profile Updated!"}
+          message={
+            modalMessage ||
+            (isFirstTimeSignup
+              ? "Your profile has been created! Let's continue to your personalized assessment."
+              : "Your profile details have been saved successfully.")
+          }
+          isAssessmentFlow={isFirstTimeSignup}
+          redirectTo={isFirstTimeSignup ? "HealthGoal" : "ProfileScreen"}
+          autoRedirectDuration={isFirstTimeSignup ? 4000 : 2200}
+          showRedirectCountdown={isFirstTimeSignup}
+          confirmButtonText={isFirstTimeSignup ? "Skip Wait" : "Done"}
+          onRedirect={handleSuccessRedirect}
           showConfetti={true}
           animationSource={require("../../assets/json/Blue Checkmark.json")}
         />

@@ -71,10 +71,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80, // Space for bottom navigation
+    paddingBottom: 125, // Generous space for floating bottom navigation on modern Android & iOS
   },
   bottomSpacing: {
-    height: 20,
+    height: 35,
   },
 });
 

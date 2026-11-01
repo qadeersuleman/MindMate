@@ -228,7 +228,11 @@ const Signup = () => {
       if (userData.hasCompletedProfile) {
         navigation.navigate('Dashboard');
       } else {
-        navigation.navigate('EditProfile');
+        navigation.navigate('EditProfile', {
+          username: userData.username || userData.email,
+          isFirstTimeSignup: true,
+          isNewUser: true,
+        });
       }
     }, 1500);
   };

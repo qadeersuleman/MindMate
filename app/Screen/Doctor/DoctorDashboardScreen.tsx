@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: 110,
     paddingHorizontal: 6,
   },
   appointmentCard: {

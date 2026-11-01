@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: Platform.OS === 'android' ? 16 : 12,
     backgroundColor: 'transparent',
   },
   bottomNav: {

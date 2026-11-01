@@ -72,16 +72,40 @@ export const clearSession = async (): Promise<boolean> => {
       'dateOfBirth',
       'weight',
       'hasCompletedProfile',
-      'hasCompletedAssessment'
+      'hasCompletedAssessment',
+      'last_mood_entry',
     ];
     
-    await (AsyncStorage as any).multiRemove(keys);
+    // Safely remove keys using removeItem which is supported on all platforms & versions
+    await Promise.all(
+      keys.map((key) =>
+        AsyncStorage.removeItem(key).catch((err) => {
+          console.warn(`Error removing key ${key}:`, err);
+        })
+      )
+    );
+
+    // Call removeMany or clear if available
+    if (typeof (AsyncStorage as any).removeMany === 'function') {
+      try {
+        await (AsyncStorage as any).removeMany(keys);
+      } catch (e) {}
+    } else if (typeof (AsyncStorage as any).multiRemove === 'function') {
+      try {
+        await (AsyncStorage as any).multiRemove(keys);
+      } catch (e) {}
+    } else if (typeof AsyncStorage.clear === 'function') {
+      try {
+        await AsyncStorage.clear();
+      } catch (e) {}
+    }
+
     console.log('All session data cleared successfully');
-    
     return true;
   } catch (error) {
     console.error('Error clearing session:', error);
-    throw error;
+    // Don't block the logout flow
+    return true;
   }
 };
 

@@ -22,19 +22,41 @@ import Colors from '../assets/colors';
 const { width, height } = Dimensions.get('window');
 const isSmallDevice = width < 375;
 
-const SuccessModal = ({
+interface SuccessModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  message?: string;
+  title?: string;
+  redirectTo?: string;
+  autoRedirectDuration?: number; // wait duration in ms
+  showRedirectCountdown?: boolean;
+  animationSource?: any;
+  onRedirect?: () => void;
+  showConfetti?: boolean;
+  assessmentData?: any;
+  isAssessmentFlow?: boolean;
+  confirmButtonText?: string;
+}
+
+const SuccessModal: React.FC<SuccessModalProps> = ({
   isVisible,
   onClose,
   message = 'Profile created successfully!',
   title = 'Great!',
   redirectTo,
-  autoRedirectDuration = 5000, // 5 seconds wait
+  autoRedirectDuration = 5000,
   showRedirectCountdown = true,
   animationSource,
   onRedirect,
   showConfetti = true,
-  assessmentData = null, // Optional: pass assessment data to show progress
+  assessmentData = null,
+  isAssessmentFlow: propIsAssessmentFlow,
+  confirmButtonText,
 }) => {
+  const isAssessmentFlow =
+    propIsAssessmentFlow !== undefined
+      ? propIsAssessmentFlow
+      : redirectTo === 'HealthGoal' || redirectTo === 'Mood';
   const [countdown, setCountdown] = useState(autoRedirectDuration / 1000);
   const [stepIndex, setStepIndex] = useState(0);
   
@@ -158,11 +180,13 @@ const SuccessModal = ({
         });
       }
 
-      // Cycle through assessment steps
-      const stepDuration = autoRedirectDuration / assessmentSteps.length;
-      stepIntervalRef.current = setInterval(() => {
-        setStepIndex((prev) => (prev < assessmentSteps.length - 1 ? prev + 1 : prev));
-      }, stepDuration);
+      // Cycle through assessment steps only when on assessment flow
+      if (isAssessmentFlow) {
+        const stepDuration = autoRedirectDuration / assessmentSteps.length;
+        stepIntervalRef.current = setInterval(() => {
+          setStepIndex((prev) => (prev < assessmentSteps.length - 1 ? prev + 1 : prev));
+        }, stepDuration);
+      }
 
       // Countdown for auto-redirect
       if (redirectTo && autoRedirectDuration > 0) {
@@ -432,44 +456,48 @@ const SuccessModal = ({
         {/* Content */}
         <View style={styles.content}>
           <Text style={styles.title}>{title}</Text>
-          {/* <Text style={styles.message}>{message}</Text> */}
-          <Text style={styles.subMessage}>
-            Please wait while we prepare your personalized mental health assessment
-          </Text>
+          {message ? <Text style={styles.message}>{message}</Text> : null}
+          {isAssessmentFlow && (
+            <Text style={styles.subMessage}>
+              Please wait while we prepare your personalized mental health assessment
+            </Text>
+          )}
         </View>
 
         {/* Assessment Steps */}
-        {renderAssessmentSteps()}
+        {isAssessmentFlow && renderAssessmentSteps()}
 
         {/* Loading indicator */}
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingDots}>
-            {[0, 1, 2].map((i) => (
-              <Animated.View
-                key={i}
-                style={[
-                  styles.loadingDot,
-                  {
-                    backgroundColor: Colors.brand.primary,
-                    transform: [
-                      {
-                        scale: stepAnim.interpolate({
-                          inputRange: [0, 0.5, 1],
-                          outputRange: [1, 1.3, 1],
-                        }),
-                      },
-                    ],
-                    opacity: stepAnim.interpolate({
-                      inputRange: [0, 0.5, 1],
-                      outputRange: [0.3, 1, 0.3],
-                    }),
-                  },
-                ]}
-              />
-            ))}
+        {isAssessmentFlow && (
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingDots}>
+              {[0, 1, 2].map((i) => (
+                <Animated.View
+                  key={i}
+                  style={[
+                    styles.loadingDot,
+                    {
+                      backgroundColor: Colors.brand.primary,
+                      transform: [
+                        {
+                          scale: stepAnim.interpolate({
+                            inputRange: [0, 0.5, 1],
+                            outputRange: [1, 1.3, 1],
+                          }),
+                        },
+                      ],
+                      opacity: stepAnim.interpolate({
+                        inputRange: [0, 0.5, 1],
+                        outputRange: [0.3, 1, 0.3],
+                      }),
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+            <Text style={styles.loadingText}>Analyzing your data...</Text>
           </View>
-          <Text style={styles.loadingText}>Analyzing your data...</Text>
-        </View>
+        )}
 
         {/* Countdown timer */}
         {redirectTo && showRedirectCountdown && (
@@ -481,8 +509,9 @@ const SuccessModal = ({
               style={styles.countdownGradient}
             >
               <Text style={styles.countdownText}>
-                Starting assessment in{' '}
-                <Text style={styles.countdownNumber}>{countdown}</Text>s
+                {isAssessmentFlow
+                  ? `Starting assessment in ${countdown}s`
+                  : `Closing in ${countdown}s`}
               </Text>
             </LinearGradient>
           </View>
@@ -490,7 +519,7 @@ const SuccessModal = ({
 
         {/* Action buttons */}
         <View style={styles.buttonContainer}>
-          {redirectTo ? (
+          {isAssessmentFlow ? (
             <>
               <TouchableOpacity
                 style={[styles.button, styles.secondaryButton]}
@@ -513,14 +542,14 @@ const SuccessModal = ({
                   style={StyleSheet.absoluteFill}
                 />
                 <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                  Skip Wait
+                  {confirmButtonText || "Skip Wait"}
                 </Text>
               </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity
               style={[styles.button, styles.singleButton]}
-              onPress={handleClose}
+              onPress={handleRedirect}
               activeOpacity={0.7}
             >
               <LinearGradient
@@ -530,7 +559,7 @@ const SuccessModal = ({
                 style={StyleSheet.absoluteFill}
               />
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                Continue
+                {confirmButtonText || "Done"}
               </Text>
             </TouchableOpacity>
           )}

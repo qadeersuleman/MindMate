@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -11,43 +11,23 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation, useIsFocused } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import Colors from "../../assets/colors";
-import { getArticles } from "../../Services/api";
+import { useArticles } from "../../hooks/useQueries";
 
 const ArticlesSection = () => {
   const scrollX = useRef(new Animated.Value(0)).current;
-  const [articles, setArticles] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<any>();
-  const isFocused = useIsFocused(); // Hook to detect when screen is focused
-
-  // Fetch articles function
-  const fetchArticles = async () => {
-    try {
-      setRefreshing(true);
-      const data = await getArticles();
-      setArticles(data);
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  // Initial fetch and refetch when screen comes into focus
-  useEffect(() => {
-    fetchArticles();
-  }, [isFocused]); // Refetch when screen is focused
+  const { data: articles = [], isRefetching, refetch } = useArticles();
 
   const onRefresh = () => {
-    fetchArticles();
+    refetch();
   };
 
-  const handleArticlePress = (article) => {
+  const handleArticlePress = (article: any) => {
     navigation.navigate("ArticleDetail", {
       article,
-      onArticleUpdate: fetchArticles, // Pass callback to update list
+      onArticleUpdate: () => refetch(),
     });
   };
 
@@ -75,7 +55,7 @@ const ArticlesSection = () => {
         snapToInterval={216}
         snapToAlignment="start"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
         }
       >
         {articles.map((article) => (

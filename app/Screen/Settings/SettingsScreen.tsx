@@ -81,12 +81,17 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
         onPress: async () => {
           try {
             await clearSession();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'WelcomeScreen' }],
-            });
           } catch (e) {
-            Alert.alert('Error', 'Failed to log out. Please try again.');
+            console.warn('Sign out session clear error:', e);
+          } finally {
+            if (navigation?.reset) {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } else if (navigation?.navigate) {
+              navigation.navigate('Login');
+            }
           }
         },
       },
@@ -132,7 +137,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
           </View>
           <TouchableOpacity
             style={styles.editBtn}
-            onPress={() => navigation.navigate('EditProfile')}
+            onPress={() => navigation.navigate('EditProfile', { isFirstTimeSignup: false, isNewUser: false })}
             activeOpacity={0.7}
           >
             <Feather name="edit-2" size={16} color="#5A8DEE" />

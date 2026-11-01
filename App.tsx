@@ -3,6 +3,7 @@ import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Toast from "react-native-toast-message";
+import QueryProvider from "./app/providers/QueryProvider";
 
 // Type definitions
 import { RootStackParamList } from "./app/types/navigation";
@@ -65,7 +66,7 @@ const Stack = createNativeStackNavigator<any>();
 
 export default function App(): React.JSX.Element {
   return (
-    <>
+    <QueryProvider>
       <NavigationContainer>
         <Stack.Navigator id="root" initialRouteName="AuthLoading">
           {/* Initial / Auth Loading */}
@@ -276,7 +277,7 @@ export default function App(): React.JSX.Element {
       </NavigationContainer>
 
       <Toast />
-    </>
+    </QueryProvider>
   );
 }
 

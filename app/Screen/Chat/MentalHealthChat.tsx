@@ -639,7 +639,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 22,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',

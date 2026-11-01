@@ -216,7 +216,10 @@ const LoginScreen = () => {
       setTimeout(() => {
         // Check if user has completed profile and assessment
         if (!response.user.hasCompletedProfile) {
-          navigation.navigate('EditProfile');
+          navigation.navigate('EditProfile', {
+            isFirstTimeSignup: true,
+            isNewUser: true,
+          });
         } else if (!response.user.hasCompletedAssessment) {
           navigation.navigate('HealthGoal');
         } else {
